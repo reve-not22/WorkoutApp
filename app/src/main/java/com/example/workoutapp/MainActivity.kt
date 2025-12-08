@@ -15,9 +15,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.navigation.NavArgumentBuilder
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.example.workoutapp.ui.theme.WorkoutAppTheme
 
 class MainActivity : ComponentActivity() {
@@ -31,6 +34,15 @@ class MainActivity : ComponentActivity() {
                     composable("login") { LoginScreen(navController) }
                     composable("home") { HomeScreen(navController) }
                     composable("workout_add") { AddWorkoutScreen(navController) }
+                    composable("workout_start/{workoutId}",
+                        arguments = listOf(
+                            navArgument("workoutId") {type = NavType.IntType}
+                        )
+                        ) {
+                            backStackEntry ->
+                            val workoutId = backStackEntry.arguments?.getInt("workoutId") ?: -1
+                            WorkoutScreen(navController, GlobalVars.workoutList.get(workoutId));
+                        }
                 }
             }
         }
@@ -38,8 +50,10 @@ class MainActivity : ComponentActivity() {
 }
 
 object GlobalVars {
-    val workoutList = mutableListOf<String>()
+    val workoutList = mutableListOf<Workout>()
 }
+
+
 
 @Composable
 fun AddPlusButton(

@@ -25,13 +25,8 @@ fun HomeScreen(navController: NavController) {
                 modifier = Modifier
                     .padding(innerPadding)
             ) {
-                for (button in GlobalVars.workoutList) {
-                    Button (
-                        onClick = { println("$button clicked!") },
-                        modifier = Modifier.padding(4.dp)
-                    ) {
-                        Text(button)
-                    }
+                for (workout in GlobalVars.workoutList) {
+                    WorkoutWidget(workout, navController)
                 }
             }
             AddPlusButton(
@@ -42,6 +37,24 @@ fun HomeScreen(navController: NavController) {
                     .padding(innerPadding)
             )
         }
+    }
+}
+
+@Composable
+fun WorkoutWidget(
+    workout: Workout,
+    navController: NavController,
+    modifier: Modifier = Modifier
+) {
+    Button(
+        onClick = {
+            val index = GlobalVars.workoutList.indexOf(workout)
+            if (index >= 0) {
+                navController.navigate("workout_start/$index")
+            }},
+        modifier = Modifier.padding(4.dp)
+    ) {
+        Text(workout.workoutName)
     }
 }
 
