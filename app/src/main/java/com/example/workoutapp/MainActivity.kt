@@ -4,18 +4,15 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.navigation.NavArgumentBuilder
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -30,10 +27,11 @@ class MainActivity : ComponentActivity() {
         setContent {
             WorkoutAppTheme {
                 val navController = rememberNavController()
+                val workoutViewModel: WorkoutViewModel = viewModel()
                 NavHost(navController = navController, startDestination = "login") {
                     composable("login") { LoginScreen(navController) }
-                    composable("home") { HomeScreen(navController) }
-                    composable("workout_add") { AddWorkoutScreen(navController) }
+                    composable("home") { HomeScreen(navController, workoutViewModel) }
+                    composable("workout_add") { AddWorkoutScreen(navController, workoutViewModel) }
                     composable("workout_start/{workoutId}",
                         arguments = listOf(
                             navArgument("workoutId") {type = NavType.IntType}
@@ -41,7 +39,8 @@ class MainActivity : ComponentActivity() {
                         ) {
                             backStackEntry ->
                             val workoutId = backStackEntry.arguments?.getInt("workoutId") ?: -1
-                            WorkoutScreen(navController, GlobalVars.workoutList.get(workoutId));
+                            val workoutScreenViewModel: WorkoutScreenViewModel = viewModel(factory= WorkoutScreenViewModelFactory(workoutViewModel.getWorkout(workoutId)!!))
+                            WorkoutScreen(workoutViewModel, workoutScreenViewModel)
                         }
                 }
             }
@@ -49,11 +48,19 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-object GlobalVars {
-    val workoutList = mutableListOf<Workout>()
+class WorkoutViewModel : ViewModel() {
+
+    private val _workoutList = mutableStateListOf<Workout>()
+    val workoutList: List<Workout> get() = _workoutList
+
+    fun addWorkout(workout: Workout) {
+        _workoutList.add(workout)
+    }
+
+    fun getWorkout(id: Int): Workout? {
+        return _workoutList.getOrNull(id)
+    }
 }
-
-
 
 @Composable
 fun AddPlusButton(

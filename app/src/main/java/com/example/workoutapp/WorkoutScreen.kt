@@ -1,41 +1,97 @@
 package com.example.workoutapp
 
-import android.R.attr.value
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
-import androidx.compose.material.icons.filled.KeyboardArrowLeft
-import androidx.compose.material.icons.filled.KeyboardArrowRight
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import androidx.navigation.NavController
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
+
+class WorkoutScreenViewModelFactory(
+    private val workout: Workout
+) : ViewModelProvider.Factory {
+
+    override fun <T : ViewModel> create(modelClass: Class<T>): T {
+        return WorkoutScreenViewModel(workout) as T
+    }
+}
+
+class WorkoutScreenViewModel(var workout: Workout): ViewModel() {
+
+    val completedList = mutableListOf<Exercise>()
+    val uncompletedList = mutableStateListOf<Exercise>().apply {
+        addAll(workout.exerciseList.map { it.copyExercise() } )
+    }
+
+    fun getWk(): Workout {
+        return workout
+    }
+
+    fun updateWeight(exercise: Exercise, weight: Int) {
+        exercise.weight = weight.toString()
+    }
+
+    fun updateReps(exercise: Exercise, reps: Int) {
+        exercise.reps = reps.toString()
+    }
+
+    fun updateSets(exercise: Exercise, sets: String) {
+        exercise.sets = sets
+    }
+
+    fun logExercise(workoutViewModel: WorkoutViewModel, exercise: Exercise) {
+        exercise.sets = (exercise.sets.toIntOrNull()?.minus(1)).toString()
+        completedList.add(exercise.copyExercise())
+
+        exercise.sets.toIntOrNull()?.let {
+            if (it <= 0) {
+                uncompletedList.remove(exercise)
+            }
+        }
+        if (uncompletedList.isEmpty()) {
+            //finalize workout
+            checkMaxExercise(workoutViewModel)
+        }
+    }
+
+    fun checkMaxExercise(workoutViewModel: WorkoutViewModel){
+        val grouped = completedList.groupBy { it.type }
+
+        for ((type, exercisesOfType) in grouped) {
+            val maxWeight = exercisesOfType.maxOfOrNull { it.weight.toIntOrNull() ?: 0 }
+            val maxReps = exercisesOfType.maxOfOrNull { it.reps.toIntOrNull() ?: 0 }
+
+            val globalExercise =
+                workoutViewModel.workoutList.find { it == getWk() }?.exerciseList?.find { it.type == type }
+
+            if (globalExercise != null) {
+                if (maxWeight != null && maxWeight > globalExercise.weight.toInt()) {
+                    globalExercise.weight = maxWeight.toString()
+                }
+
+                if (maxReps != null && maxReps > globalExercise.reps.toInt()) {
+                    globalExercise.reps = maxReps.toString()
+                }
+            }
+        }
+    }
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun WorkoutScreen(navController: NavController, workout: Workout) {
+fun WorkoutScreen(workoutViewModel:WorkoutViewModel, workoutScreenViewModel: WorkoutScreenViewModel) {
     Scaffold (
         topBar = {
             TopAppBar(
@@ -44,42 +100,54 @@ fun WorkoutScreen(navController: NavController, workout: Workout) {
                         modifier = Modifier.fillMaxWidth(),
                         contentAlignment = Alignment.Center
                     ) {
-                        Text(workout.workoutName)
+                        Text(workoutScreenViewModel.getWk().workoutName)
                     }
                 }
             )
         }
     ) {
         paddingValues ->
+
         LazyColumn (
             modifier = Modifier.fillMaxSize(),
             contentPadding = paddingValues,
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            items(workout.exerciseList.size, key = {index -> workout.exerciseList[index].hashCode()}) {index ->
-                val exercise = workout.exerciseList[index]
-
-                WorkoutExerciseWidget(exercise)
+            items(workoutScreenViewModel.uncompletedList, key = {it.hashCode()}) {exercise ->
+                WorkoutExerciseWidget(workoutViewModel, workoutScreenViewModel, exercise)
             }
         }
     }
 }
 
 @Composable
-fun WorkoutExerciseWidget(exercise: Exercise, modifier: Modifier = Modifier)
+fun WorkoutExerciseWidget(workoutViewModel: WorkoutViewModel, workoutScreenViewModel: WorkoutScreenViewModel, exercise: Exercise, modifier: Modifier = Modifier)
 {
     Row(
         modifier = modifier
-            .fillMaxWidth()
+            .fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically
     ) {
         val weightValue = exercise.weight.toIntOrNull() ?: 0
         val repsValue = exercise.reps.toIntOrNull() ?: 0
-        val setsValue = exercise.sets.toIntOrNull() ?: 0
 
-        ExerciseField("Type", exercise.type, {exercise.type = it}, false, Modifier.weight(1f))
-        Stepper("Weight", weightValue, {exercise.weight = it.toString()}, 1, Modifier.weight(1f))
-        Stepper("Reps", repsValue, {exercise.reps = it.toString()}, 1,Modifier.weight(1f))
-        Stepper("Sets", setsValue, {exercise.sets = it.toString()}, 1, Modifier.weight(1f))
+        IconButton(
+            onClick = {
+                //log exercise
+                workoutScreenViewModel.logExercise(workoutViewModel, exercise)
+            },
+            Modifier.weight(0.5f)
+        ) {
+            Icon(Icons.Default.Check, contentDescription = "Complete")
+        }
+        ExerciseField("Type", exercise.type, {}, false,
+            Modifier.weight(1f).fillMaxWidth())
+        Stepper("Weight", weightValue, {newValue -> workoutScreenViewModel.updateWeight(exercise, newValue)}, 1,
+            Modifier.weight(1f).fillMaxWidth())
+        Stepper("Reps", repsValue, {newValue -> workoutScreenViewModel.updateReps(exercise, newValue)}, 1,
+            Modifier.weight(1f).fillMaxWidth())
+        ExerciseField("Sets left", exercise.sets, {newValue -> workoutScreenViewModel.updateSets(exercise, newValue)}, false,
+            Modifier.weight(1f).fillMaxWidth())
     }
 }
 
@@ -90,43 +158,51 @@ fun Stepper(
     onValueChange: (Int) -> Unit,
     step: Int = 1,
     modifier: Modifier = Modifier
-)
-{
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = modifier
-            .background(MaterialTheme.colorScheme.background, RoundedCornerShape(8.dp))
-            .padding(horizontal = 2.dp, vertical = 2.dp)
-            .border(1.dp, Color.Gray.copy(alpha = .9f), shape = RoundedCornerShape(8.dp))
-    ) {
-        IconButton(
-            onClick = {onValueChange(value - step)},
-            modifier = Modifier.weight(1f)
-        ) {
-            Icon(Icons.Default.KeyboardArrowLeft, contentDescription = "Decrease")
-        }
-
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier.weight(1f)
-        ) {
-            Text(
-                text = label,
-                fontSize = 12.sp
+) {
+    Box(modifier = modifier) {
+        OutlinedTextField(
+            value = value.toString(),
+            onValueChange = { newText ->
+                newText.toIntOrNull()?.let { onValueChange(it) }
+            },
+            label = { Text(label) },
+            singleLine = true,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(56.dp),
+            enabled = false,
+            textStyle = TextStyle(
+                textAlign = TextAlign.Center
+            ),
+            colors = OutlinedTextFieldDefaults.colors(
+                disabledTextColor = Color.Gray.copy(alpha = .9f),
+                disabledBorderColor = Color.Gray.copy(alpha = .9f),
+                disabledLabelColor = Color.DarkGray.copy(alpha = .9f),
+                disabledLeadingIconColor = Color.Black.copy(alpha = .9f),
+                disabledTrailingIconColor = Color.Black.copy(alpha = .9f),
+                disabledPlaceholderColor = Color.Gray.copy(alpha = .9f)
             )
-            Text(
-                "$value",
-                style = MaterialTheme.typography.bodyLarge,
-                fontSize = 12.sp
-            )
-        }
+        )
 
-        IconButton(
-            onClick = {onValueChange(value + step)},
-            modifier = Modifier.weight(1f)
+        Row(
+            horizontalArrangement = Arrangement.SpaceBetween,
+            modifier = modifier
+                .padding(horizontal = 2.dp, vertical = 2.dp)
+                .matchParentSize()
         ) {
-            Icon(Icons.Default.KeyboardArrowRight, contentDescription = "Increase")
+            IconButton(
+                onClick = { onValueChange(value - step) },
+                modifier = Modifier.weight(1f)
+            ) {
+                Icon(Icons.AutoMirrored.Filled.KeyboardArrowLeft, contentDescription = "Decrease")
+            }
+
+            IconButton(
+                onClick = { onValueChange(value + step) },
+                modifier = Modifier.weight(1f)
+            ) {
+                Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = "Increase")
+            }
         }
     }
-
 }

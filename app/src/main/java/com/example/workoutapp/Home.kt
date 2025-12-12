@@ -12,7 +12,7 @@ import androidx.navigation.NavController
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun HomeScreen(navController: NavController) {
+fun HomeScreen(navController: NavController, workoutViewModel: WorkoutViewModel) {
     Scaffold (modifier = Modifier.fillMaxSize()) { innerPadding ->
         Column(
             modifier = Modifier
@@ -25,8 +25,8 @@ fun HomeScreen(navController: NavController) {
                 modifier = Modifier
                     .padding(innerPadding)
             ) {
-                for (workout in GlobalVars.workoutList) {
-                    WorkoutWidget(workout, navController)
+                for (workout in workoutViewModel.workoutList) {
+                    WorkoutWidget(workoutViewModel, workout, navController)
                 }
             }
             AddPlusButton(
@@ -42,13 +42,14 @@ fun HomeScreen(navController: NavController) {
 
 @Composable
 fun WorkoutWidget(
+    workoutViewModel: WorkoutViewModel,
     workout: Workout,
     navController: NavController,
     modifier: Modifier = Modifier
 ) {
     Button(
         onClick = {
-            val index = GlobalVars.workoutList.indexOf(workout)
+            val index = workoutViewModel.workoutList.indexOf(workout)
             if (index >= 0) {
                 navController.navigate("workout_start/$index")
             }},
