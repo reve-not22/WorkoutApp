@@ -5,6 +5,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.snapshots.SnapshotStateList
 
 class Workout(
-    val exerciseList: SnapshotStateList<Exercise> = mutableStateListOf(),
+    var exerciseList: SnapshotStateList<Exercise> = mutableStateListOf(),
     var workoutName: String
 )

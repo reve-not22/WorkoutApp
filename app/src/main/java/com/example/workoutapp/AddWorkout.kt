@@ -35,10 +35,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 
-class AddWorkoutViewModel : ViewModel() {
-    var exerciseList = mutableStateListOf<Exercise>()
-        private set
 
+open class ModifyWorkoutViewModel: ViewModel() {
+    var exerciseList = mutableStateListOf<Exercise>()
 
     var workoutNameState = TextFieldState("")
 
@@ -56,9 +55,6 @@ class AddWorkoutViewModel : ViewModel() {
 
     fun addExercise(e: Exercise) {exerciseList.add(e)}
     fun removeExercise(e: Exercise) {exerciseList.remove(e)}
-    fun saveWorkout(workoutViewModel: WorkoutViewModel) {
-        workoutViewModel.addWorkout(Workout(exerciseList, workoutNameState.text as String))
-    }
 
     fun updateExercise(
         exercise: Exercise,
@@ -73,6 +69,11 @@ class AddWorkoutViewModel : ViewModel() {
             reps?.let {this.reps = it}
             sets?.let {this.sets = it}
         }
+    }
+}
+class AddWorkoutViewModel : ModifyWorkoutViewModel() {
+    fun saveWorkout(workoutViewModel: WorkoutViewModel) {
+        workoutViewModel.addWorkout(Workout(exerciseList, workoutNameState.text as String))
     }
 }
 
@@ -183,22 +184,22 @@ fun AddWorkoutScreen(navController: NavController, workoutViewModel: WorkoutView
 }
 
 @Composable
-fun AddExerciseWidget(addWorkoutViewModel: AddWorkoutViewModel, onAdd: (Exercise) -> Unit, modifier: Modifier = Modifier)
+fun AddExerciseWidget(modifyWorkoutViewModel: ModifyWorkoutViewModel, onAdd: (Exercise) -> Unit, modifier: Modifier = Modifier)
 {
 
     Row (
         modifier = modifier
             .fillMaxWidth()
     ) {
-        ExerciseField("Type", addWorkoutViewModel.newType.value, {addWorkoutViewModel.newType.value = it}, true, Modifier.weight(1f))
-        ExerciseField("Weight", addWorkoutViewModel.newWeight.value, {addWorkoutViewModel.newWeight.value = it}, true, Modifier.weight(1f))
-        ExerciseField("Reps", addWorkoutViewModel.newReps.value, {addWorkoutViewModel.newReps.value = it}, true, Modifier.weight(1f))
-        ExerciseField("Sets", addWorkoutViewModel.newSets.value, {addWorkoutViewModel.newSets.value = it}, true, Modifier.weight(1f))
+        ExerciseField("Type", modifyWorkoutViewModel.newType.value, {modifyWorkoutViewModel.newType.value = it}, true, Modifier.weight(1f))
+        ExerciseField("Weight", modifyWorkoutViewModel.newWeight.value, {modifyWorkoutViewModel.newWeight.value = it}, true, Modifier.weight(1f))
+        ExerciseField("Reps", modifyWorkoutViewModel.newReps.value, {modifyWorkoutViewModel.newReps.value = it}, true, Modifier.weight(1f))
+        ExerciseField("Sets", modifyWorkoutViewModel.newSets.value, {modifyWorkoutViewModel.newSets.value = it}, true, Modifier.weight(1f))
 
         AddPlusButton(
             onClick = {
-                onAdd(Exercise(addWorkoutViewModel.newType.value,addWorkoutViewModel.newWeight.value, addWorkoutViewModel.newReps.value,addWorkoutViewModel.newSets.value))
-                addWorkoutViewModel.resetNewValues()
+                onAdd(Exercise(modifyWorkoutViewModel.newType.value,modifyWorkoutViewModel.newWeight.value, modifyWorkoutViewModel.newReps.value,modifyWorkoutViewModel.newSets.value))
+                modifyWorkoutViewModel.resetNewValues()
             },
             modifier = Modifier
                 .padding(2.dp),
@@ -209,7 +210,7 @@ fun AddExerciseWidget(addWorkoutViewModel: AddWorkoutViewModel, onAdd: (Exercise
 }
 
 @Composable
-fun ExerciseWidget(addWorkoutViewModel: AddWorkoutViewModel, exercise: Exercise, modifier: Modifier = Modifier)
+fun ExerciseWidget(modifyWorkoutViewModel: ModifyWorkoutViewModel, exercise: Exercise, modifier: Modifier = Modifier)
 {
     Row(
         modifier = modifier
@@ -217,13 +218,13 @@ fun ExerciseWidget(addWorkoutViewModel: AddWorkoutViewModel, exercise: Exercise,
     ) {
         println(exercise.type)
         ExerciseField("Type", exercise.type,
-            {addWorkoutViewModel.updateExercise(exercise, type = it)}, false, Modifier.weight(1f))
+            {modifyWorkoutViewModel.updateExercise(exercise, type = it)}, false, Modifier.weight(1f))
         ExerciseField("Weight", exercise.weight,
-            {addWorkoutViewModel.updateExercise(exercise, weight = it)}, false, Modifier.weight(1f))
+            {modifyWorkoutViewModel.updateExercise(exercise, weight = it)}, false, Modifier.weight(1f))
         ExerciseField("Reps", exercise.reps,
-            {addWorkoutViewModel.updateExercise(exercise, reps = it)}, false, Modifier.weight(1f))
+            {modifyWorkoutViewModel.updateExercise(exercise, reps = it)}, false, Modifier.weight(1f))
         ExerciseField("Sets", exercise.sets,
-            {addWorkoutViewModel.updateExercise(exercise, sets = it)}, false, Modifier.weight(1f))
+            {modifyWorkoutViewModel.updateExercise(exercise, sets = it)}, false, Modifier.weight(1f))
     }
 }
 

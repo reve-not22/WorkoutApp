@@ -1,11 +1,13 @@
 package com.example.workoutapp
 
+import EditWorkoutScreen
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateListOf
@@ -42,6 +44,15 @@ class MainActivity : ComponentActivity() {
                             val workoutScreenViewModel: WorkoutScreenViewModel = viewModel(factory= WorkoutScreenViewModelFactory(workoutViewModel.getWorkout(workoutId)!!))
                             WorkoutScreen(workoutViewModel, workoutScreenViewModel)
                         }
+                    composable("workout_edit/{workoutId}",
+                        arguments = listOf(
+                            navArgument("workoutId") {type = NavType.IntType}
+                        )
+                    ) {
+                            backStackEntry ->
+                        val workoutId = backStackEntry.arguments?.getInt("workoutId") ?: -1
+                        EditWorkoutScreen(navController, workoutViewModel.getWorkout(workoutId)!!)
+                    }
                 }
             }
         }
@@ -75,6 +86,22 @@ fun AddPlusButton(
         containerColor = containerColor,
         contentColor = contentColor) {
         Icon(Icons.Default.Add, contentDescription = "add")
+    }
+}
+
+@Composable
+fun AddCheckButton(
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    containerColor: Color = MaterialTheme.colorScheme.primaryContainer,
+    contentColor: Color = MaterialTheme.colorScheme.primary
+) {
+    FloatingActionButton(
+        onClick = { onClick() },
+        modifier = modifier,
+        containerColor = containerColor,
+        contentColor = contentColor) {
+        Icon(Icons.Default.Check, contentDescription = "add")
     }
 }
 
