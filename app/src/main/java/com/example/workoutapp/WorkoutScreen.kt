@@ -1,6 +1,5 @@
 package com.example.workoutapp
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -10,6 +9,7 @@ import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -25,6 +25,13 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.compose.viewModel
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
 
 class WorkoutScreenViewModelFactory(
     private val workout: Workout
@@ -71,7 +78,9 @@ class WorkoutScreenViewModel(var workout: Workout): ViewModel() {
     }
 
     fun logExercise(workoutViewModel: WorkoutViewModel, exercise: Exercise) {
-        exercise.sets = (exercise.sets.toIntOrNull()?.minus(1)).toString()
+        val setsLeft = (exercise.sets.toIntOrNull() ?: 0) - 1
+        exercise.sets = setsLeft.toString()
+
         completedList.add(exercise.copyExercise())
 
         exercise.sets.toIntOrNull()?.let {
@@ -95,12 +104,15 @@ class WorkoutScreenViewModel(var workout: Workout): ViewModel() {
             val globalExercise =
                 workoutViewModel.workoutList.find { it == getWk() }?.exerciseList?.find { it.type == type }
 
+            val globalWeight = globalExercise?.weight?.toIntOrNull() ?: 0
+            val globalReps = globalExercise?.reps?.toIntOrNull() ?: 0
+
             if (globalExercise != null) {
-                if (maxWeight != null && maxWeight > globalExercise.weight.toInt()) {
+                if (maxWeight != null && maxWeight > globalWeight) {
                     globalExercise.weight = maxWeight.toString()
                 }
 
-                if (maxReps != null && maxReps > globalExercise.reps.toInt()) {
+                if (maxReps != null && maxReps > globalReps) {
                     globalExercise.reps = maxReps.toString()
                 }
             }
@@ -108,22 +120,74 @@ class WorkoutScreenViewModel(var workout: Workout): ViewModel() {
     }
 }
 
+class TimerViewModel : ViewModel() {
+    private val _timer = MutableStateFlow(0L)
+    val timer = _timer.asStateFlow()
+
+    private var timerJob: Job? = null
+
+    fun startTimer(value:Long) {
+        timerJob?.cancel()
+        _timer.value = value
+        timerJob = viewModelScope.launch {
+            while (timer.value > 0) {
+                delay(1000)
+                _timer.value--
+            }
+            timerJob?.cancel()
+        }
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        timerJob?.cancel()
+    }
+}
+
+@Composable
+fun TimerScreenContent(timerViewModel: TimerViewModel) {
+    val timerValue by timerViewModel.timer.collectAsState()
+
+    TimerScreen(
+        timerValue = timerValue
+    )
+}
+
+@Composable
+fun TimerScreen(
+    timerValue: Long
+) {
+    Text(text = timerValue.formatTime())
+}
+
+fun Long.formatTime(): String {
+    val remainingSeconds = this % 60
+    return String.format(":%02d", remainingSeconds)
+}
+
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun WorkoutScreen(workoutViewModel:WorkoutViewModel, workoutScreenViewModel: WorkoutScreenViewModel) {
+    val timerViewModel: TimerViewModel = viewModel()
     Scaffold (
         topBar = {
             TopAppBar(
                 title = {
-                    Box (
+                        //timer
+                    Row (
                         modifier = Modifier.fillMaxWidth(),
-                        contentAlignment = Alignment.Center
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
+                        TimerScreenContent(timerViewModel)
+                        Spacer(modifier = Modifier.weight(0.76f))
+
                         Text(workoutScreenViewModel.getWk().workoutName)
+                        Spacer(modifier = Modifier.weight(1f))
                     }
                 }
             )
-        }
+        },
     ) {
         paddingValues ->
 
@@ -133,14 +197,14 @@ fun WorkoutScreen(workoutViewModel:WorkoutViewModel, workoutScreenViewModel: Wor
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             items(workoutScreenViewModel.uncompletedList, key = {it.hashCode()}) {exercise ->
-                WorkoutExerciseWidget(workoutViewModel, workoutScreenViewModel, exercise)
+                WorkoutExerciseWidget(timerViewModel, workoutViewModel, workoutScreenViewModel, exercise)
             }
         }
     }
 }
 
 @Composable
-fun WorkoutExerciseWidget(workoutViewModel: WorkoutViewModel, workoutScreenViewModel: WorkoutScreenViewModel, exercise: Exercise, modifier: Modifier = Modifier)
+fun WorkoutExerciseWidget(timerViewModel: TimerViewModel, workoutViewModel: WorkoutViewModel, workoutScreenViewModel: WorkoutScreenViewModel, exercise: Exercise, modifier: Modifier = Modifier)
 {
     Row(
         modifier = modifier
@@ -153,6 +217,7 @@ fun WorkoutExerciseWidget(workoutViewModel: WorkoutViewModel, workoutScreenViewM
         IconButton(
             onClick = {
                 //log exercise
+                timerViewModel.startTimer(60)
                 workoutScreenViewModel.logExercise(workoutViewModel, exercise)
             },
             Modifier.weight(0.5f)
@@ -169,6 +234,7 @@ fun WorkoutExerciseWidget(workoutViewModel: WorkoutViewModel, workoutScreenViewM
             Modifier.weight(1f).fillMaxWidth())
     }
 }
+
 
 @Composable
 fun SuggestionStepper(
