@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Scaffold
@@ -49,7 +48,7 @@ fun HomeScreen(navController: NavController, workoutViewModel: WorkoutViewModel)
                         .heightIn(min = 120.dp))
                 }
             }
-            AddPlusButton(
+            PlusButton(
                 onClick = {
                     navController.navigate("workout_add")
                 },
@@ -71,16 +70,10 @@ fun WorkoutWidget(
         modifier = modifier
             .combinedClickable (
                 onClick = {
-                    val index = workoutViewModel.workoutList.indexOf(workout)
-                    if (index >= 0) {
-                        navController.navigate("workout_start/$index")
-                    }
+                    navController.navigate("workout_start/${workout.id}")
                 },
                 onLongClick = {
-                    val index = workoutViewModel.workoutList.indexOf(workout)
-                    if (index >= 0) {
-                        navController.navigate("workout_edit/$index")
-                    }
+                    navController.navigate("workout_edit/${workout.id}")
                 }
             ),
         elevation = CardDefaults.cardElevation(8.dp)

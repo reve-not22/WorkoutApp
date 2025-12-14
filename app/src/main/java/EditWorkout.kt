@@ -1,42 +1,23 @@
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.text.input.TextFieldLineLimits
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material3.BottomAppBar
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SwipeToDismissBox
-import androidx.compose.material3.SwipeToDismissBoxValue
-import androidx.compose.material3.rememberSwipeToDismissBoxState
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import com.example.workoutapp.AddCheckButton
-import com.example.workoutapp.AddExerciseWidget
-import com.example.workoutapp.AddPlusButton
-import com.example.workoutapp.AddWorkoutViewModel
-import com.example.workoutapp.Exercise
-import com.example.workoutapp.ExerciseWidget
-import com.example.workoutapp.ModifyWorkoutViewModel
-import com.example.workoutapp.Workout
-import com.example.workoutapp.WorkoutViewModel
+import com.example.workoutapp.*
 
 class EditWorkoutViewModel(
     val workout: Workout
@@ -55,9 +36,18 @@ class EditWorkoutViewModel(
     }
 }
 
+class EditWorkoutViewModelFactory(
+    private val workout: Workout
+) : ViewModelProvider.Factory {
+
+    override fun <T : ViewModel> create(modelClass: Class<T>): T {
+        return EditWorkoutViewModel(workout) as T
+    }
+}
+
 @Composable
-fun EditWorkoutScreen(navController: NavController, workout: Workout) {
-    val editWorkoutViewModel = EditWorkoutViewModel(workout)
+fun EditWorkoutScreen(navController: NavController, workout: Workout, workoutViewModel: WorkoutViewModel) {
+    val editWorkoutViewModel:EditWorkoutViewModel = viewModel(factory=EditWorkoutViewModelFactory(workout))
 
     Scaffold (
         modifier = Modifier.fillMaxSize(),
@@ -66,21 +56,44 @@ fun EditWorkoutScreen(navController: NavController, workout: Workout) {
                 containerColor = MaterialTheme.colorScheme.primaryContainer,
                 contentColor = MaterialTheme.colorScheme.primary,
             ) {
-                OutlinedTextField(
-                    state = editWorkoutViewModel.workoutNameState,
-                    lineLimits = TextFieldLineLimits.SingleLine
-                )
-
-                AddCheckButton(
-                    onClick = {
-                        editWorkoutViewModel.updateWorkout()
-                        navController.navigate("home")
-                    },
-                    modifier = Modifier
-                        .padding(8.dp),
-                    containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                    contentColor = MaterialTheme.colorScheme.secondary
-                )
+                Row (
+                    modifier = Modifier.fillMaxWidth()
+                ){
+                    TrashButton(
+                        onClick = {
+                            workoutViewModel.deleteWorkout(workout)
+                            navController.navigate("home") {
+                                popUpTo(navController.graph.startDestinationId) {
+                                    saveState = true
+                                }
+                                launchSingleTop = true
+                                restoreState = true
+                            }
+                        },
+                        modifier = Modifier
+                            .padding(8.dp)
+                            .weight(1f),
+                        containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                        contentColor = MaterialTheme.colorScheme.secondary
+                    )
+                    OutlinedTextField(
+                        state = editWorkoutViewModel.workoutNameState,
+                        lineLimits = TextFieldLineLimits.SingleLine,
+                        modifier = Modifier
+                            .weight(2f)
+                    )
+                    CheckButton(
+                        onClick = {
+                            editWorkoutViewModel.updateWorkout()
+                            navController.navigate("home")
+                        },
+                        modifier = Modifier
+                            .padding(8.dp)
+                            .weight(1f),
+                        containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                        contentColor = MaterialTheme.colorScheme.secondary
+                    )
+                }
             }
         }
     ) { innerPadding ->
@@ -101,7 +114,7 @@ fun EditWorkoutScreen(navController: NavController, workout: Workout) {
                 modifier = Modifier.fillMaxSize(),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                items(editWorkoutViewModel.exerciseList.size, key = {index -> editWorkoutViewModel.exerciseList[index].hashCode()}) {index ->
+                items(editWorkoutViewModel.exerciseList.size, key = {index -> editWorkoutViewModel.exerciseList[index].id}) {index ->
                     val exercise = editWorkoutViewModel.exerciseList[index]
 
                     val dismissState = rememberSwipeToDismissBoxState (

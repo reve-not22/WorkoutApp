@@ -93,7 +93,7 @@ fun AddWorkoutScreen(navController: NavController, workoutViewModel: WorkoutView
                     lineLimits = TextFieldLineLimits.SingleLine
                 )
 
-                AddPlusButton(
+                PlusButton(
                     onClick = {
                         addWorkoutViewModel.saveWorkout(workoutViewModel)
                         navController.navigate("home")
@@ -196,7 +196,7 @@ fun AddExerciseWidget(modifyWorkoutViewModel: ModifyWorkoutViewModel, onAdd: (Ex
         ExerciseField("Reps", modifyWorkoutViewModel.newReps.value, {modifyWorkoutViewModel.newReps.value = it}, true, Modifier.weight(1f))
         ExerciseField("Sets", modifyWorkoutViewModel.newSets.value, {modifyWorkoutViewModel.newSets.value = it}, true, Modifier.weight(1f))
 
-        AddPlusButton(
+        PlusButton(
             onClick = {
                 onAdd(Exercise(modifyWorkoutViewModel.newType.value,modifyWorkoutViewModel.newWeight.value, modifyWorkoutViewModel.newReps.value,modifyWorkoutViewModel.newSets.value))
                 modifyWorkoutViewModel.resetNewValues()
