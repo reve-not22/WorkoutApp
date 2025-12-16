@@ -1,21 +1,30 @@
 package com.example.workoutapp
 
 import EditWorkoutScreen
+import android.content.Context
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.viewModels
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material3.*
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.datastore.core.DataStore
+import androidx.datastore.core.Serializer
+import androidx.datastore.dataStore
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -23,16 +32,126 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.workoutapp.ui.theme.WorkoutAppTheme
-import java.util.UUID
+import com.google.protobuf.InvalidProtocolBufferException
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.launch
+import java.io.InputStream
+import java.io.OutputStream
+import java.util.*
+
+val Context.workoutDataStore: DataStore<WorkoutDataList> by dataStore(
+    fileName = "workouts.pb",
+    serializer = WorkoutSerializer
+)
+
+object WorkoutSerializer : Serializer<WorkoutDataList> {
+    override val defaultValue: WorkoutDataList = WorkoutDataList.getDefaultInstance()
+    override suspend fun readFrom(input: InputStream): WorkoutDataList =
+        try {
+            WorkoutDataList.parseFrom(input)
+        } catch (e: InvalidProtocolBufferException) {
+            defaultValue
+        }
+
+    override suspend fun writeTo(
+        t: WorkoutDataList,
+        output: OutputStream
+    ) = t.writeTo(output)
+}
+
+class WorkoutRepository(private val workoutStore:DataStore<WorkoutDataList>) {
+    val workoutsFlow: Flow<List<Workout>> = workoutStore.data.map { proto ->
+        proto.workoutsList.map{it.toDomain()}
+    }
+
+    suspend fun updateWorkouts(wList:List<Workout>) {
+        workoutStore.updateData { current ->
+            current.toBuilder()
+                .clearWorkouts()
+                .addAllWorkouts(wList.map {it.toProto()})
+                .build()
+        }
+    }
+}
+
+class WorkoutViewModel(
+    val workoutRepository: WorkoutRepository
+) : ViewModel() {
+    init {
+
+        viewModelScope.launch {
+            try {
+                val wList = workoutRepository.workoutsFlow.firstOrNull()
+
+                if (!wList.isNullOrEmpty()) {
+                    _workoutList.clear()
+                    _workoutList.addAll(wList)
+                }
+            }
+            catch (e:Exception){
+                throw e
+            }
+        }
+
+
+    }
+    private val _workoutList = mutableStateListOf<Workout>()
+    val workoutList: List<Workout> get() = _workoutList
+
+    fun addWorkout(workout: Workout) {
+        _workoutList.add(workout)
+        persistState()
+    }
+
+    fun deleteWorkout(workout: Workout) {
+        _workoutList.remove(workout)
+        persistState()
+    }
+
+    fun getWorkout(id: UUID): Workout? = _workoutList.firstOrNull{ it.id == id }
+
+    override fun onCleared() {
+        persistState()
+    }
+
+    fun persistState() {
+        viewModelScope.launch {
+            workoutRepository.updateWorkouts(workoutList)
+        }
+    }
+}
+
+class WorkoutVMFactory(
+    private val workoutRepository: WorkoutRepository
+) : ViewModelProvider.Factory {
+    override fun <T : ViewModel> create(modelClass: Class<T>): T {
+        return WorkoutViewModel(workoutRepository) as T
+    }
+}
+
 
 class MainActivity : ComponentActivity() {
+
+    private val workoutViewModel:WorkoutViewModel by viewModels {
+        WorkoutVMFactory(
+            WorkoutRepository(this.workoutDataStore)
+        )
+    }
+
+    //change if you ever use multiple activities
+    /*override fun onStop() {
+        super.onStop()
+        workoutViewModel.persistState()
+    }*/
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
             WorkoutAppTheme {
                 val navController = rememberNavController()
-                val workoutViewModel: WorkoutViewModel = viewModel()
                 NavHost(navController = navController, startDestination = "login") {
                     composable("login") { LoginScreen(navController) }
                     composable("home") { HomeScreen(navController, workoutViewModel) }
@@ -60,7 +179,7 @@ class MainActivity : ComponentActivity() {
                                 viewModel(
                                     factory= WorkoutScreenViewModelFactory(workout)
                                 )
-                            WorkoutScreen(workoutViewModel, workoutScreenViewModel)
+                            WorkoutScreen(workoutViewModel, workoutScreenViewModel, navController)
                         }
                     composable("workout_edit/{workoutId}",
                         arguments = listOf(
@@ -87,23 +206,6 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
-}
-
-class WorkoutViewModel : ViewModel() {
-
-    private val _workoutList = mutableStateListOf<Workout>()
-    val workoutList: List<Workout> get() = _workoutList
-
-    fun addWorkout(workout: Workout) {
-        _workoutList.add(workout)
-    }
-
-    fun deleteWorkout(workout: Workout) {
-        _workoutList.remove(workout)
-    }
-
-    fun getWorkout(id: UUID): Workout? = _workoutList.firstOrNull{ it.id == id }
-
 }
 
 @Composable

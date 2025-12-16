@@ -10,7 +10,7 @@ class Exercise(
     weight: String,
     reps: String,
     sets: String,
-    val id: UUID = UUID.randomUUID()
+    var id: UUID = UUID.randomUUID()
 ) {
     var type by mutableStateOf(type)
     var weight by mutableStateOf(weight)
@@ -18,4 +18,22 @@ class Exercise(
     var sets by mutableStateOf(sets)
 
     fun copyExercise() = Exercise(type, weight, reps, sets)
+
 }
+
+fun Exercise.toProto(): ExerciseData =
+    ExerciseData.newBuilder()
+        .setId(id.toString())
+        .setWeight(weight)
+        .setReps(reps)
+        .setSets(sets)
+        .build()
+
+fun ExerciseData.toDomain(): Exercise =
+    Exercise (
+        id = UUID.fromString(id),
+        type = type,
+        weight = weight,
+        reps = reps,
+        sets = sets
+    )

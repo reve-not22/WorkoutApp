@@ -27,6 +27,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -77,7 +78,7 @@ class WorkoutScreenViewModel(var workout: Workout): ViewModel() {
         }
     }
 
-    fun logExercise(workoutViewModel: WorkoutViewModel, exercise: Exercise) {
+    fun logExercise(workoutViewModel: WorkoutViewModel, exercise: Exercise, navController: NavController) {
         val setsLeft = (exercise.sets.toIntOrNull() ?: 0) - 1
         exercise.sets = setsLeft.toString()
 
@@ -88,9 +89,11 @@ class WorkoutScreenViewModel(var workout: Workout): ViewModel() {
                 uncompletedList.remove(exercise)
             }
         }
+        checkMaxExercise(workoutViewModel)
+
         if (uncompletedList.isEmpty()) {
             //finalize workout
-            checkMaxExercise(workoutViewModel)
+            navController.navigate("home")
         }
     }
 
@@ -117,6 +120,8 @@ class WorkoutScreenViewModel(var workout: Workout): ViewModel() {
                 }
             }
         }
+
+        workoutViewModel.persistState()
     }
 }
 
@@ -168,7 +173,7 @@ fun Long.formatTime(): String {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun WorkoutScreen(workoutViewModel:WorkoutViewModel, workoutScreenViewModel: WorkoutScreenViewModel) {
+fun WorkoutScreen(workoutViewModel:WorkoutViewModel, workoutScreenViewModel: WorkoutScreenViewModel, navController: NavController) {
     val timerViewModel: TimerViewModel = viewModel()
     Scaffold (
         topBar = {
@@ -197,14 +202,14 @@ fun WorkoutScreen(workoutViewModel:WorkoutViewModel, workoutScreenViewModel: Wor
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             items(workoutScreenViewModel.uncompletedList, key = {it.hashCode()}) {exercise ->
-                WorkoutExerciseWidget(timerViewModel, workoutViewModel, workoutScreenViewModel, exercise)
+                WorkoutExerciseWidget(timerViewModel, workoutViewModel, workoutScreenViewModel, navController, exercise)
             }
         }
     }
 }
 
 @Composable
-fun WorkoutExerciseWidget(timerViewModel: TimerViewModel, workoutViewModel: WorkoutViewModel, workoutScreenViewModel: WorkoutScreenViewModel, exercise: Exercise, modifier: Modifier = Modifier)
+fun WorkoutExerciseWidget(timerViewModel: TimerViewModel, workoutViewModel: WorkoutViewModel, workoutScreenViewModel: WorkoutScreenViewModel, navController: NavController, exercise: Exercise, modifier: Modifier = Modifier)
 {
     Row(
         modifier = modifier
@@ -218,7 +223,7 @@ fun WorkoutExerciseWidget(timerViewModel: TimerViewModel, workoutViewModel: Work
             onClick = {
                 //log exercise
                 timerViewModel.startTimer(60)
-                workoutScreenViewModel.logExercise(workoutViewModel, exercise)
+                workoutScreenViewModel.logExercise(workoutViewModel, exercise, navController)
             },
             Modifier.weight(0.5f)
         ) {
@@ -226,7 +231,7 @@ fun WorkoutExerciseWidget(timerViewModel: TimerViewModel, workoutViewModel: Work
         }
         ExerciseField("Type", exercise.type, {}, false,
             Modifier.weight(1f).fillMaxWidth())
-        SuggestionStepper("Weight", weightValue, {returnV -> workoutScreenViewModel.updateWeight(exercise, returnV)}, workoutScreenViewModel.findWeightSuggestion(exercise), 1,
+        SuggestionStepper("Weight", weightValue, {returnV -> workoutScreenViewModel.updateWeight(exercise, returnV)}, workoutScreenViewModel.findWeightSuggestion(exercise), 5,
             Modifier.weight(1f).fillMaxWidth())
         Stepper("Reps", repsValue, {returnV -> workoutScreenViewModel.updateReps(exercise, returnV)}, 1,
             Modifier.weight(1f).fillMaxWidth())

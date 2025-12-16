@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+option java_package = "com.example.workoutapp";
+option java_multiple_files = true;
+
+message ExerciseData {
+  string id = 1;
+  string type = 2;
+  string weight = 3;
+  string reps = 4;
+  string sets = 5;
+}
+
+message WorkoutData {
+  string id = 1;
+  string name = 2;
+  repeated ExerciseData exercises = 3;
+}
+
+message WorkoutDataList {
+  repeated WorkoutData workouts = 1;
+}

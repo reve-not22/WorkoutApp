@@ -85,6 +85,7 @@ fun EditWorkoutScreen(navController: NavController, workout: Workout, workoutVie
                     CheckButton(
                         onClick = {
                             editWorkoutViewModel.updateWorkout()
+                            workoutViewModel.persistState()
                             navController.navigate("home")
                         },
                         modifier = Modifier
