@@ -1,6 +1,7 @@
 package com.example.workoutapp
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -10,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.input.TextFieldLineLimits
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.material3.BottomAppBar
@@ -205,7 +207,7 @@ fun AddExerciseWidget(modifyWorkoutViewModel: ModifyWorkoutViewModel, onAdd: (Ex
                 modifyWorkoutViewModel.resetNewValues()
             },
             modifier = Modifier
-                .padding(2.dp),
+                .padding(top=10.dp),
             containerColor = MaterialTheme.colorScheme.primaryContainer,
             contentColor = MaterialTheme.colorScheme.primary
         )
@@ -218,9 +220,17 @@ fun ExerciseWidget(modifyWorkoutViewModel: ModifyWorkoutViewModel, exercise: Exe
     var isEnabled by remember { mutableStateOf(defEnabled)}
     Row(
         modifier = modifier
+            .border(width=2.dp, Color.White, RoundedCornerShape(6.dp))
             .fillMaxWidth()
             .combinedClickable (
                 onClick = {
+                },
+                onDoubleClick = {
+                    if (!isEnabled) {
+                        isEnabled = true
+                    } else {
+                        isEnabled = false
+                    }
                 },
                 onLongClick = {
                     if (!isEnabled) {
@@ -228,19 +238,18 @@ fun ExerciseWidget(modifyWorkoutViewModel: ModifyWorkoutViewModel, exercise: Exe
                     } else {
                         isEnabled = false
                     }
-
                 }
             )
     ) {
         println(exercise.type)
         ExerciseField("Type", exercise.type,
-            {modifyWorkoutViewModel.updateExercise(exercise, type = it)}, isEnabled, Modifier.weight(1f))
+            {modifyWorkoutViewModel.updateExercise(exercise, type = it)}, isEnabled, Modifier.weight(1f).padding(top=12.dp, bottom = 12.dp))
         ExerciseField("Weight", exercise.weight,
-            {modifyWorkoutViewModel.updateExercise(exercise, weight = it)}, isEnabled, Modifier.weight(1f))
+            {modifyWorkoutViewModel.updateExercise(exercise, weight = it)}, isEnabled, Modifier.weight(1f).padding(top=12.dp, bottom = 12.dp))
         ExerciseField("Reps", exercise.reps,
-            {modifyWorkoutViewModel.updateExercise(exercise, reps = it)}, isEnabled, Modifier.weight(1f))
+            {modifyWorkoutViewModel.updateExercise(exercise, reps = it)}, isEnabled, Modifier.weight(1f).padding(top=12.dp, bottom = 12.dp))
         ExerciseField("Sets", exercise.sets,
-            {modifyWorkoutViewModel.updateExercise(exercise, sets = it)}, isEnabled, Modifier.weight(1f))
+            {modifyWorkoutViewModel.updateExercise(exercise, sets = it)}, isEnabled, Modifier.weight(1f).padding(top=12.dp, bottom = 12.dp))
     }
 }
 

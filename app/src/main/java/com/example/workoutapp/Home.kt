@@ -10,6 +10,8 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -32,7 +34,8 @@ import java.util.Locale
 @Composable
 fun WorkoutCalendar(
     onDayClicked: (LocalDate) -> Unit,
-    workoutViewModel: WorkoutViewModel
+    workoutViewModel: WorkoutViewModel,
+    modifier:Modifier = Modifier
 ) {
     SelectableWeekCalendar(
         calendarState = rememberSelectableWeekCalendarState(),
@@ -163,7 +166,18 @@ fun CalWorkoutPickerDialog(
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun HomeScreen(navController: NavController, workoutViewModel: WorkoutViewModel) {
-    Scaffold (modifier = Modifier.fillMaxSize()) { innerPadding ->
+    Scaffold (
+        modifier = Modifier.fillMaxSize(),
+        floatingActionButton = {
+            FloatingActionButton(
+                onClick = {
+                    navController.navigate("workout_add")
+                }
+            ) {
+                Icon(Icons.Default.Add, contentDescription = "Add workout")
+            }
+        }
+    ) { innerPadding ->
 
         val count = workoutViewModel.workoutList.size
         val columns = when {
@@ -187,7 +201,8 @@ fun HomeScreen(navController: NavController, workoutViewModel: WorkoutViewModel)
                     selectedDate = clickedDate
                     openAlertDialog.value = true
                 },
-                workoutViewModel
+                workoutViewModel,
+                modifier = Modifier.weight(1f)
             )
 
             selectedDate?.let {
@@ -226,13 +241,6 @@ fun HomeScreen(navController: NavController, workoutViewModel: WorkoutViewModel)
                         .heightIn(min = 120.dp))
                 }
             }
-            PlusButton(
-                onClick = {
-                    navController.navigate("workout_add")
-                },
-                modifier = Modifier
-                    .padding(innerPadding)
-            )
         }
     }
 }

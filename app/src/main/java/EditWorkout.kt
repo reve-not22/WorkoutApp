@@ -71,7 +71,7 @@ fun EditWorkoutScreen(navController: NavController, workout: Workout, workoutVie
                             }
                         },
                         modifier = Modifier
-                            .padding(8.dp)
+                            .padding(horizontal=8.dp)
                             .weight(1f),
                         containerColor = MaterialTheme.colorScheme.secondaryContainer,
                         contentColor = MaterialTheme.colorScheme.secondary
@@ -89,7 +89,7 @@ fun EditWorkoutScreen(navController: NavController, workout: Workout, workoutVie
                             navController.navigate("home")
                         },
                         modifier = Modifier
-                            .padding(8.dp)
+                            .padding(horizontal=8.dp)
                             .weight(1f),
                         containerColor = MaterialTheme.colorScheme.secondaryContainer,
                         contentColor = MaterialTheme.colorScheme.secondary
