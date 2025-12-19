@@ -1,20 +1,165 @@
 package com.example.workoutapp
 
+import android.R.color
+import android.os.Build
+import androidx.annotation.RequiresApi
+import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import io.github.boguszpawlowski.composecalendar.SelectableWeekCalendar
+import io.github.boguszpawlowski.composecalendar.day.DefaultDay
+import io.github.boguszpawlowski.composecalendar.rememberSelectableWeekCalendarState
+import java.time.LocalDate
+import java.time.format.TextStyle.FULL
+import java.time.format.TextStyle.SHORT
+import java.util.Locale
 
+
+@Composable
+fun WorkoutCalendar(
+    onDayClicked: (LocalDate) -> Unit,
+    workoutViewModel: WorkoutViewModel
+) {
+    SelectableWeekCalendar(
+        calendarState = rememberSelectableWeekCalendarState(),
+
+        daysOfWeekHeader = { daysOfWeek ->
+            Row{
+                daysOfWeek.forEach { dayOfWeek ->
+                    Text(
+                        textAlign = TextAlign.Center,
+                        text = dayOfWeek.getDisplayName(SHORT, Locale.getDefault()),
+                        modifier = Modifier
+                            .weight(1f)
+                            .wrapContentHeight(),
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
+            }
+        },
+
+        weekHeader = { weekState ->
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    modifier = Modifier.testTag("WeekLabel"),
+                    text = weekState.currentWeek.yearMonth.month
+                        .getDisplayName(FULL, Locale.getDefault())
+                        .lowercase()
+                        .replaceFirstChar { it.titlecase() },
+                    style = MaterialTheme.typography.headlineLarge,
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = weekState.currentWeek.yearMonth.year.toString(),
+                    style = MaterialTheme.typography.headlineLarge
+                )
+            }
+        },
+
+        dayContent = { dayState ->
+            val workout = workoutViewModel.getCalendarMap()[dayState.date.dayOfWeek]
+            val isToday = dayState.date == LocalDate.now()
+
+            val boxColor = when {
+                isToday -> Color.Red
+                else -> MaterialTheme.colorScheme.background
+            }
+
+            Box(
+                modifier = Modifier
+                    .size(48.dp)
+                    .background(boxColor),
+                contentAlignment = Alignment.Center
+            ) {
+                DefaultDay (
+                    state = dayState,
+                    onClick= {
+                        onDayClicked(dayState.date)
+                    }
+                )
+                if (workout != null) {
+                    Box (
+                        modifier = Modifier
+                            .align(Alignment.Center)
+                            .background(
+                                color = MaterialTheme.colorScheme.secondaryContainer,
+                                shape = RoundedCornerShape(8.dp)
+                            )
+                            .padding(horizontal = 6.dp, vertical = 2.dp)
+                    ) {
+                        Text(
+                            text = workout.workoutName,
+                            fontSize = 10.sp,
+                            maxLines = 1
+                        )
+                    }
+                }
+            }
+        }
+    )
+}
+
+@RequiresApi(Build.VERSION_CODES.O)
+@Composable
+fun CalWorkoutPickerDialog(
+    date:LocalDate,
+    workoutViewModel: WorkoutViewModel,
+    onDismiss: () -> Unit,
+    onWorkoutSelected: (Workout?) -> Unit
+) {
+    var expanded by remember { mutableStateOf(true) }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {Text("Assign workout")},
+        text = {
+            Column{
+                Text("Select workout for ${date.dayOfWeek}")
+                DropdownMenu(
+                    expanded = expanded,
+                    onDismissRequest = {expanded = false}
+                ) {
+                    DropdownMenuItem(
+                        text = {Text("None")},
+                        onClick = {
+                            onWorkoutSelected(null)
+                            onDismiss()
+                        }
+                    )
+                    workoutViewModel.workoutList.forEach { workout ->
+                        DropdownMenuItem(
+                            text= {Text(workout.workoutName)},
+                            onClick = {
+                                onWorkoutSelected(workout)
+                                onDismiss()
+                            }
+                        )
+                    }
+                }
+            }
+        },
+        confirmButton = {}
+    )
+}
+
+@RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun HomeScreen(navController: NavController, workoutViewModel: WorkoutViewModel) {
@@ -34,6 +179,39 @@ fun HomeScreen(navController: NavController, workoutViewModel: WorkoutViewModel)
                 .fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally
         ){
+            var selectedDate by remember {mutableStateOf<LocalDate?>(null)}
+            val openAlertDialog = remember { mutableStateOf(false) }
+
+            WorkoutCalendar(
+                onDayClicked = {clickedDate ->
+                    selectedDate = clickedDate
+                    openAlertDialog.value = true
+                },
+                workoutViewModel
+            )
+
+            selectedDate?.let {
+
+                when {
+                    openAlertDialog.value -> {
+                        CalWorkoutPickerDialog(
+                            date = it,
+                            workoutViewModel = workoutViewModel,
+                            onDismiss = {
+                                selectedDate = null
+                                openAlertDialog.value = false
+                            },
+                            onWorkoutSelected = { workout ->
+                                selectedDate?.let { date ->
+                                    workoutViewModel.putWorkoutWeek(it.dayOfWeek, workout)
+                                }
+                            }
+                        )
+                    }
+                }
+
+
+            }
             LazyVerticalGrid (
                 columns = GridCells.Fixed(columns),
                 contentPadding = PaddingValues(12.dp),
@@ -42,7 +220,7 @@ fun HomeScreen(navController: NavController, workoutViewModel: WorkoutViewModel)
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 items(workoutViewModel.workoutList) { workout ->
-                    WorkoutWidget(workoutViewModel, workout, navController, Modifier
+                    WorkoutWidget(workout, navController, Modifier
                         .weight(1f)
                         .fillMaxSize()
                         .heightIn(min = 120.dp))
@@ -61,7 +239,6 @@ fun HomeScreen(navController: NavController, workoutViewModel: WorkoutViewModel)
 
 @Composable
 fun WorkoutWidget(
-    workoutViewModel: WorkoutViewModel,
     workout: Workout,
     navController: NavController,
     modifier:Modifier = Modifier

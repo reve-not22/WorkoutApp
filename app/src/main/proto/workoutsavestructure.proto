@@ -19,4 +19,6 @@ message WorkoutData {
 
 message WorkoutDataList {
   repeated WorkoutData workouts = 1;
+
+  map<string, WorkoutData> weekMap = 2;
 }

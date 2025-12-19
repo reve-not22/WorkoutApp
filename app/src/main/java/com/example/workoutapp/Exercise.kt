@@ -24,6 +24,7 @@ class Exercise(
 fun Exercise.toProto(): ExerciseData =
     ExerciseData.newBuilder()
         .setId(id.toString())
+        .setType(type)
         .setWeight(weight)
         .setReps(reps)
         .setSets(sets)

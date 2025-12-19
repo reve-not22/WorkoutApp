@@ -17,6 +17,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateMapOf
+import androidx.compose.runtime.snapshots.SnapshotStateMap
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.datastore.core.DataStore
@@ -39,6 +41,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import java.io.InputStream
 import java.io.OutputStream
+import java.time.DayOfWeek
 import java.util.*
 
 val Context.workoutDataStore: DataStore<WorkoutDataList> by dataStore(
@@ -61,17 +64,41 @@ object WorkoutSerializer : Serializer<WorkoutDataList> {
     ) = t.writeTo(output)
 }
 
+
 class WorkoutRepository(private val workoutStore:DataStore<WorkoutDataList>) {
     val workoutsFlow: Flow<List<Workout>> = workoutStore.data.map { proto ->
         proto.workoutsList.map{it.toDomain()}
     }
 
-    suspend fun updateWorkouts(wList:List<Workout>) {
+    val workoutMapFlow: Flow<Map<DayOfWeek, Workout>> = workoutStore.data.map { proto ->
+        proto.weekMapMap.mapNotNull { (k, v) ->
+            DayOfWeek.valueOf(k) to v.toDomain()
+        }.toMap()
+    }
+
+    suspend fun updateData(wList:List<Workout>) {
         workoutStore.updateData { current ->
             current.toBuilder()
                 .clearWorkouts()
                 .addAllWorkouts(wList.map {it.toProto()})
                 .build()
+        }
+    }
+
+    suspend fun putCalKey(key:String, workout:Workout?) {
+        if (workout != null) {
+            workoutStore.updateData { current ->
+                current.toBuilder()
+                    .putWeekMap(key, workout.toProto())
+                    .build()
+            }
+        }
+        else {
+            workoutStore.updateData { current ->
+                current.toBuilder()
+                    .removeWeekMap(key)
+                    .build()
+            }
         }
     }
 }
@@ -94,8 +121,6 @@ class WorkoutViewModel(
                 throw e
             }
         }
-
-
     }
     private val _workoutList = mutableStateListOf<Workout>()
     val workoutList: List<Workout> get() = _workoutList
@@ -112,13 +137,37 @@ class WorkoutViewModel(
 
     fun getWorkout(id: UUID): Workout? = _workoutList.firstOrNull{ it.id == id }
 
+    val workoutByWeek = mutableStateMapOf<DayOfWeek, Workout?>()
+
+    fun putWorkoutWeek(day: DayOfWeek, workout:Workout?) {
+        viewModelScope.launch {
+            workoutByWeek[day] = workout
+            workoutRepository.putCalKey(day.name, workout)
+        }
+    }
+
+    fun getCalendarMap(): SnapshotStateMap<DayOfWeek, Workout?>
+    {
+        //update workout by week
+        viewModelScope.launch {
+            val map = workoutRepository.workoutMapFlow.firstOrNull()
+
+            if (!map.isNullOrEmpty()) {
+                workoutByWeek.clear()
+                workoutByWeek.putAll(map)
+            }
+        }
+
+        return workoutByWeek
+    }
+
     override fun onCleared() {
         persistState()
     }
 
     fun persistState() {
         viewModelScope.launch {
-            workoutRepository.updateWorkouts(workoutList)
+            workoutRepository.updateData(workoutList)
         }
     }
 }

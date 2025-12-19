@@ -38,6 +38,7 @@ android {
 }
 
 dependencies {
+    implementation("io.github.boguszpawlowski.composecalendar:composecalendar:1.4.0")
     implementation("com.google.protobuf:protobuf-javalite:3.25.3")
     implementation("androidx.datastore:datastore:1.1.1")
     implementation("androidx.lifecycle:lifecycle-process:2.8.7")
