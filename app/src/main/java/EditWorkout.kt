@@ -166,7 +166,7 @@ fun EditWorkoutScreen(navController: NavController, workout: Workout, workoutVie
                             }
                         },
                         content = {
-                            ExerciseWidget(editWorkoutViewModel, exercise)
+                            ExerciseWidget(editWorkoutViewModel, exercise, false)
                         }
                     )
                 }

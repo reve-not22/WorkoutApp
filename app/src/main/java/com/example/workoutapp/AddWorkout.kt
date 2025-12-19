@@ -1,6 +1,7 @@
 package com.example.workoutapp
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -24,8 +25,11 @@ import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -174,7 +178,7 @@ fun AddWorkoutScreen(navController: NavController, workoutViewModel: WorkoutView
                             }
                         },
                         content = {
-                            ExerciseWidget(addWorkoutViewModel, exercise)
+                            ExerciseWidget(addWorkoutViewModel, exercise, false)
                         }
                     )
                 }
@@ -186,7 +190,6 @@ fun AddWorkoutScreen(navController: NavController, workoutViewModel: WorkoutView
 @Composable
 fun AddExerciseWidget(modifyWorkoutViewModel: ModifyWorkoutViewModel, onAdd: (Exercise) -> Unit, modifier: Modifier = Modifier)
 {
-
     Row (
         modifier = modifier
             .fillMaxWidth()
@@ -210,21 +213,34 @@ fun AddExerciseWidget(modifyWorkoutViewModel: ModifyWorkoutViewModel, onAdd: (Ex
 }
 
 @Composable
-fun ExerciseWidget(modifyWorkoutViewModel: ModifyWorkoutViewModel, exercise: Exercise, modifier: Modifier = Modifier)
+fun ExerciseWidget(modifyWorkoutViewModel: ModifyWorkoutViewModel, exercise: Exercise, defEnabled: Boolean = false, modifier: Modifier = Modifier)
 {
+    var isEnabled by remember { mutableStateOf(defEnabled)}
     Row(
         modifier = modifier
             .fillMaxWidth()
+            .combinedClickable (
+                onClick = {
+                },
+                onLongClick = {
+                    if (!isEnabled) {
+                        isEnabled = true
+                    } else {
+                        isEnabled = false
+                    }
+
+                }
+            )
     ) {
         println(exercise.type)
         ExerciseField("Type", exercise.type,
-            {modifyWorkoutViewModel.updateExercise(exercise, type = it)}, false, Modifier.weight(1f))
+            {modifyWorkoutViewModel.updateExercise(exercise, type = it)}, isEnabled, Modifier.weight(1f))
         ExerciseField("Weight", exercise.weight,
-            {modifyWorkoutViewModel.updateExercise(exercise, weight = it)}, false, Modifier.weight(1f))
+            {modifyWorkoutViewModel.updateExercise(exercise, weight = it)}, isEnabled, Modifier.weight(1f))
         ExerciseField("Reps", exercise.reps,
-            {modifyWorkoutViewModel.updateExercise(exercise, reps = it)}, false, Modifier.weight(1f))
+            {modifyWorkoutViewModel.updateExercise(exercise, reps = it)}, isEnabled, Modifier.weight(1f))
         ExerciseField("Sets", exercise.sets,
-            {modifyWorkoutViewModel.updateExercise(exercise, sets = it)}, false, Modifier.weight(1f))
+            {modifyWorkoutViewModel.updateExercise(exercise, sets = it)}, isEnabled, Modifier.weight(1f))
     }
 }
 
