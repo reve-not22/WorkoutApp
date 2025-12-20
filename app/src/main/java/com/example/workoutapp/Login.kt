@@ -2,6 +2,8 @@ package com.example.workoutapp
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
@@ -29,12 +31,22 @@ fun LoginScreen(navController: NavController) {
                     .padding(innerPadding)
                     .align(Alignment.TopCenter)
             )
-            LoginButton (
-                onClick = { navController.navigate("home")},
+            Column (
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
                     .padding(bottom = 32.dp)
-            )
+            ) {
+                Button(
+                    onClick = {navController.navigate("stats")}
+                ) {
+                    Text("Stats")
+                }
+                Button (
+                    onClick = { navController.navigate("home")}
+                ) {
+                    Text("Login")
+                }
+            }
         }
     }
 }
@@ -45,11 +57,4 @@ fun Title(text: String, modifier: Modifier = Modifier) {
         text = text,
         modifier = modifier
     )
-}
-
-@Composable
-fun LoginButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
-    Button(onClick = { onClick() }, modifier = modifier) {
-        Text("Login")
-    }
 }

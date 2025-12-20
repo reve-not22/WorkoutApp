@@ -38,6 +38,12 @@ android {
 }
 
 dependencies {
+    // Lets-Plot Kotlin API
+    implementation("org.jetbrains.lets-plot:lets-plot-kotlin-kernel:4.12.0")
+    implementation("org.jetbrains.lets-plot:lets-plot-common:4.8.1")
+    implementation("org.jetbrains.lets-plot:canvas:4.8.1")
+    implementation("org.jetbrains.lets-plot:plot-raster:4.8.1")
+    implementation("org.jetbrains.lets-plot:lets-plot-compose:3.0.1")
     implementation("io.github.boguszpawlowski.composecalendar:composecalendar:1.4.0")
     implementation("com.google.protobuf:protobuf-javalite:3.25.3")
     implementation("androidx.datastore:datastore:1.1.1")

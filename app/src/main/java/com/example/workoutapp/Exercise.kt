@@ -3,7 +3,33 @@ package com.example.workoutapp
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import java.time.LocalDate
+import java.util.Date
 import java.util.UUID
+
+class LoggedExercise(
+    type:String,
+    weight:Int,
+    date: LocalDate
+) {
+    var type by mutableStateOf(type)
+    var weight by mutableStateOf(weight)
+    var date by mutableStateOf(date)
+}
+
+fun LoggedExercise.toProto() : LoggedExerciseData =
+    LoggedExerciseData.newBuilder()
+        .setType(type)
+        .setWeight(weight.toString())
+        .setDate(date.toString())
+        .build()
+
+fun LoggedExerciseData.toDomain() : LoggedExercise =
+    LoggedExercise(
+        type = type,
+        weight = Integer.parseInt(weight),
+        date = LocalDate.parse(date)
+    )
 
 class Exercise(
     type: String,
@@ -18,8 +44,14 @@ class Exercise(
     var sets by mutableStateOf(sets)
 
     fun copyExercise() = Exercise(type, weight, reps, sets)
-
 }
+
+fun Exercise.toLoggedExercise(date:LocalDate): LoggedExercise =
+    LoggedExercise(
+        type = type,
+        weight = Integer.parseInt(weight),
+        date=date
+    )
 
 fun Exercise.toProto(): ExerciseData =
     ExerciseData.newBuilder()

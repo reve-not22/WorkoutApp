@@ -42,6 +42,7 @@ import kotlinx.coroutines.launch
 import java.io.InputStream
 import java.io.OutputStream
 import java.time.DayOfWeek
+import java.time.LocalDate
 import java.util.*
 
 val Context.workoutDataStore: DataStore<WorkoutDataList> by dataStore(
@@ -70,17 +71,22 @@ class WorkoutRepository(private val workoutStore:DataStore<WorkoutDataList>) {
         proto.workoutsList.map{it.toDomain()}
     }
 
+    val loggedFlow: Flow<List<LoggedExercise>> = workoutStore.data.map { proto ->
+        proto.loggedExercisesList.map{it.toDomain()}
+    }
+
     val workoutMapFlow: Flow<Map<DayOfWeek, Workout>> = workoutStore.data.map { proto ->
         proto.weekMapMap.mapNotNull { (k, v) ->
             DayOfWeek.valueOf(k) to v.toDomain()
         }.toMap()
     }
 
-    suspend fun updateData(wList:List<Workout>) {
+    suspend fun updateData(wList:List<Workout>, lList:List<LoggedExercise>) {
         workoutStore.updateData { current ->
             current.toBuilder()
                 .clearWorkouts()
                 .addAllWorkouts(wList.map {it.toProto()})
+                .addAllLoggedExercises(lList.map {it.toProto()})
                 .build()
         }
     }
@@ -111,6 +117,12 @@ class WorkoutViewModel(
         viewModelScope.launch {
             try {
                 val wList = workoutRepository.workoutsFlow.firstOrNull()
+                val lList = workoutRepository.loggedFlow.firstOrNull()
+
+                if (!lList.isNullOrEmpty()) {
+                    _loggedExercises.clear()
+                    _loggedExercises.addAll(lList)
+                }
 
                 if (!wList.isNullOrEmpty()) {
                     _workoutList.clear()
@@ -124,6 +136,14 @@ class WorkoutViewModel(
     }
     private val _workoutList = mutableStateListOf<Workout>()
     val workoutList: List<Workout> get() = _workoutList
+
+    private val _loggedExercises = mutableStateListOf<LoggedExercise>()
+
+    val loggedExercises: List<LoggedExercise> get() = _loggedExercises
+
+    fun logExercise(exercise: Exercise) {
+        _loggedExercises.add(exercise.toLoggedExercise(LocalDate.now()))
+    }
 
     fun addWorkout(workout: Workout) {
         _workoutList.add(workout)
@@ -167,7 +187,7 @@ class WorkoutViewModel(
 
     fun persistState() {
         viewModelScope.launch {
-            workoutRepository.updateData(workoutList)
+            workoutRepository.updateData(workoutList, _loggedExercises)
         }
     }
 }
@@ -204,6 +224,7 @@ class MainActivity : ComponentActivity() {
                 NavHost(navController = navController, startDestination = "login") {
                     composable("login") { LoginScreen(navController) }
                     composable("home") { HomeScreen(navController, workoutViewModel) }
+                    composable("stats") { StatsScreen(navController, workoutViewModel) }
                     composable("workout_add") { AddWorkoutScreen(navController, workoutViewModel) }
                     composable("workout_start/{workoutId}",
                         arguments = listOf(

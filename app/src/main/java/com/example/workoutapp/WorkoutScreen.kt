@@ -81,6 +81,7 @@ class WorkoutScreenViewModel(var workout: Workout): ViewModel() {
     fun logExercise(workoutViewModel: WorkoutViewModel, exercise: Exercise, navController: NavController) {
         val setsLeft = (exercise.sets.toIntOrNull() ?: 0) - 1
         exercise.sets = setsLeft.toString()
+        workoutViewModel.logExercise(exercise)
 
         completedList.add(exercise.copyExercise())
 
