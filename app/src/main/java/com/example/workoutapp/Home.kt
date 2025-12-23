@@ -1,8 +1,5 @@
 package com.example.workoutapp
 
-import android.R.color
-import android.os.Build
-import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
@@ -28,14 +25,13 @@ import io.github.boguszpawlowski.composecalendar.rememberSelectableWeekCalendarS
 import java.time.LocalDate
 import java.time.format.TextStyle.FULL
 import java.time.format.TextStyle.SHORT
-import java.util.Locale
+import java.util.*
 
 
 @Composable
 fun WorkoutCalendar(
     onDayClicked: (LocalDate) -> Unit,
-    workoutViewModel: WorkoutViewModel,
-    modifier:Modifier = Modifier
+    workoutViewModel: WorkoutViewModel
 ) {
     SelectableWeekCalendar(
         calendarState = rememberSelectableWeekCalendarState(),
@@ -120,7 +116,6 @@ fun WorkoutCalendar(
     )
 }
 
-@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun CalWorkoutPickerDialog(
     date:LocalDate,
@@ -162,7 +157,6 @@ fun CalWorkoutPickerDialog(
     )
 }
 
-@RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun HomeScreen(navController: NavController, workoutViewModel: WorkoutViewModel) {
@@ -201,8 +195,7 @@ fun HomeScreen(navController: NavController, workoutViewModel: WorkoutViewModel)
                     selectedDate = clickedDate
                     openAlertDialog.value = true
                 },
-                workoutViewModel,
-                modifier = Modifier.weight(1f)
+                workoutViewModel
             )
 
             selectedDate?.let {
@@ -217,7 +210,7 @@ fun HomeScreen(navController: NavController, workoutViewModel: WorkoutViewModel)
                                 openAlertDialog.value = false
                             },
                             onWorkoutSelected = { workout ->
-                                selectedDate?.let { date ->
+                                selectedDate?.let {
                                     workoutViewModel.putWorkoutWeek(it.dayOfWeek, workout)
                                 }
                             }

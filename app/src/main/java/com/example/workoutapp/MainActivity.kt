@@ -65,7 +65,6 @@ object WorkoutSerializer : Serializer<WorkoutDataList> {
     ) = t.writeTo(output)
 }
 
-
 class WorkoutRepository(private val workoutStore:DataStore<WorkoutDataList>) {
     val workoutsFlow: Flow<List<Workout>> = workoutStore.data.map { proto ->
         proto.workoutsList.map{it.toDomain()}
@@ -123,6 +122,12 @@ class WorkoutViewModel(
                     _loggedExercises.clear()
                     _loggedExercises.addAll(lList)
                 }
+
+                /*_loggedExercises.add(LoggedExercise("Bench", 25, LocalDate.now()))
+                _loggedExercises.add(LoggedExercise("Bench", 50, LocalDate.now().plusDays(1L)))
+                _loggedExercises.add(LoggedExercise("Bench", 35, LocalDate.now().plusDays(1L)))
+                _loggedExercises.add(LoggedExercise("Bench", 45, LocalDate.now().plusDays(1L)))
+                _loggedExercises.add(LoggedExercise("Bench", 35, LocalDate.now().plusDays(2L)))*/
 
                 if (!wList.isNullOrEmpty()) {
                     _workoutList.clear()
@@ -195,11 +200,11 @@ class WorkoutViewModel(
 class WorkoutVMFactory(
     private val workoutRepository: WorkoutRepository
 ) : ViewModelProvider.Factory {
+    @Suppress("UNCHECKED_CAST")
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         return WorkoutViewModel(workoutRepository) as T
     }
 }
-
 
 class MainActivity : ComponentActivity() {
 
@@ -224,7 +229,7 @@ class MainActivity : ComponentActivity() {
                 NavHost(navController = navController, startDestination = "login") {
                     composable("login") { LoginScreen(navController) }
                     composable("home") { HomeScreen(navController, workoutViewModel) }
-                    composable("stats") { StatsScreen(navController, workoutViewModel) }
+                    composable("stats") { StatsScreen(workoutViewModel) }
                     composable("workout_add") { AddWorkoutScreen(navController, workoutViewModel) }
                     composable("workout_start/{workoutId}",
                         arguments = listOf(

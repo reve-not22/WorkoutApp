@@ -3,35 +3,15 @@ package com.example.workoutapp
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.combinedClickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.input.TextFieldLineLimits
 import androidx.compose.foundation.text.input.TextFieldState
-import androidx.compose.material3.BottomAppBar
-import androidx.compose.material3.Icon
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SwipeToDismissBox
-import androidx.compose.material3.SwipeToDismissBoxValue
-import androidx.compose.material3.Text
-import androidx.compose.material3.rememberSwipeToDismissBoxState
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -77,6 +57,7 @@ open class ModifyWorkoutViewModel: ViewModel() {
         }
     }
 }
+
 class AddWorkoutViewModel : ModifyWorkoutViewModel() {
     fun saveWorkout(workoutViewModel: WorkoutViewModel) {
         workoutViewModel.addWorkout(Workout(exerciseList, workoutNameState.text as String))
@@ -180,7 +161,7 @@ fun AddWorkoutScreen(navController: NavController, workoutViewModel: WorkoutView
                             }
                         },
                         content = {
-                            ExerciseWidget(addWorkoutViewModel, exercise, false)
+                            ExerciseWidget(Modifier,addWorkoutViewModel, exercise, false)
                         }
                     )
                 }
@@ -215,7 +196,7 @@ fun AddExerciseWidget(modifyWorkoutViewModel: ModifyWorkoutViewModel, onAdd: (Ex
 }
 
 @Composable
-fun ExerciseWidget(modifyWorkoutViewModel: ModifyWorkoutViewModel, exercise: Exercise, defEnabled: Boolean = false, modifier: Modifier = Modifier)
+fun ExerciseWidget(modifier: Modifier = Modifier, modifyWorkoutViewModel: ModifyWorkoutViewModel, exercise: Exercise, defEnabled: Boolean = false)
 {
     var isEnabled by remember { mutableStateOf(defEnabled)}
     Row(
@@ -226,18 +207,10 @@ fun ExerciseWidget(modifyWorkoutViewModel: ModifyWorkoutViewModel, exercise: Exe
                 onClick = {
                 },
                 onDoubleClick = {
-                    if (!isEnabled) {
-                        isEnabled = true
-                    } else {
-                        isEnabled = false
-                    }
+                    isEnabled = !isEnabled
                 },
                 onLongClick = {
-                    if (!isEnabled) {
-                        isEnabled = true
-                    } else {
-                        isEnabled = false
-                    }
+                    isEnabled = !isEnabled
                 }
             )
     ) {

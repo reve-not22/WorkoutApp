@@ -6,27 +6,19 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
-import androidx.navigation.NavController
 import org.jetbrains.letsPlot.Figure
 import org.jetbrains.letsPlot.compose.PlotPanel
-import org.jetbrains.letsPlot.core.plot.base.DataFrame
-import org.jetbrains.letsPlot.geom.geomDensity
 import org.jetbrains.letsPlot.geom.geomLine
 import org.jetbrains.letsPlot.geom.geomPoint
 import org.jetbrains.letsPlot.letsPlot
-import kotlin.collections.map
-import kotlin.to
 
 @Composable
-fun StatsScreen(navController: NavController, workoutViewModel: WorkoutViewModel) {
-    Scaffold (
-
-    ) {
+fun StatsScreen(workoutViewModel: WorkoutViewModel) {
+    Scaffold { paddingValues ->
         val figure = createFigure(workoutViewModel)
 
         Column(
-            modifier = Modifier.fillMaxSize().padding(start = 10.dp, top = 10.dp, end = 10.dp, bottom = 10.dp),
+            modifier = Modifier.fillMaxSize().padding(paddingValues),
         ) {
 
             PlotPanel(

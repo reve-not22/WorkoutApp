@@ -40,6 +40,7 @@ class EditWorkoutViewModelFactory(
     private val workout: Workout
 ) : ViewModelProvider.Factory {
 
+    @Suppress("UNCHECKED_CAST")
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         return EditWorkoutViewModel(workout) as T
     }
@@ -166,7 +167,7 @@ fun EditWorkoutScreen(navController: NavController, workout: Workout, workoutVie
                             }
                         },
                         content = {
-                            ExerciseWidget(editWorkoutViewModel, exercise, false)
+                            ExerciseWidget(Modifier, editWorkoutViewModel, exercise, false)
                         }
                     )
                 }

@@ -1,11 +1,11 @@
 package com.example.workoutapp
 
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import java.time.LocalDate
-import java.util.Date
-import java.util.UUID
+import java.util.*
 
 class LoggedExercise(
     type:String,
@@ -13,7 +13,7 @@ class LoggedExercise(
     date: LocalDate
 ) {
     var type by mutableStateOf(type)
-    var weight by mutableStateOf(weight)
+    var weight by mutableIntStateOf(weight)
     var date by mutableStateOf(date)
 }
 
@@ -27,7 +27,7 @@ fun LoggedExercise.toProto() : LoggedExerciseData =
 fun LoggedExerciseData.toDomain() : LoggedExercise =
     LoggedExercise(
         type = type,
-        weight = Integer.parseInt(weight),
+        weight = weight.toIntOrNull() ?: 0,
         date = LocalDate.parse(date)
     )
 
@@ -49,7 +49,7 @@ class Exercise(
 fun Exercise.toLoggedExercise(date:LocalDate): LoggedExercise =
     LoggedExercise(
         type = type,
-        weight = Integer.parseInt(weight),
+        weight = weight.toIntOrNull() ?: 0,
         date=date
     )
 

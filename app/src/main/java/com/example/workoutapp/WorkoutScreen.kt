@@ -8,13 +8,7 @@ import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -37,7 +31,7 @@ import kotlinx.coroutines.launch
 class WorkoutScreenViewModelFactory(
     private val workout: Workout
 ) : ViewModelProvider.Factory {
-
+    @Suppress("UNCHECKED_CAST")
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         return WorkoutScreenViewModel(workout) as T
     }
@@ -171,7 +165,6 @@ fun Long.formatTime(): String {
     return String.format(":%02d", remainingSeconds)
 }
 
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun WorkoutScreen(workoutViewModel:WorkoutViewModel, workoutScreenViewModel: WorkoutScreenViewModel, navController: NavController) {
@@ -232,10 +225,21 @@ fun WorkoutExerciseWidget(timerViewModel: TimerViewModel, workoutViewModel: Work
         }
         ExerciseField("Type", exercise.type, {}, false,
             Modifier.weight(1f).fillMaxWidth())
-        SuggestionStepper("Weight", weightValue, {returnV -> workoutScreenViewModel.updateWeight(exercise, returnV)}, workoutScreenViewModel.findWeightSuggestion(exercise), 5,
-            Modifier.weight(1f).fillMaxWidth())
-        Stepper("Reps", repsValue, {returnV -> workoutScreenViewModel.updateReps(exercise, returnV)}, 1,
-            Modifier.weight(1f).fillMaxWidth())
+        SuggestionStepper(
+            Modifier.weight(1f).fillMaxWidth(),
+            "Weight",
+            weightValue,
+            { returnV -> workoutScreenViewModel.updateWeight(exercise, returnV) },
+            workoutScreenViewModel.findWeightSuggestion(exercise),
+            5,
+        )
+        Stepper(
+            Modifier.weight(1f).fillMaxWidth(),
+            "Reps",
+            repsValue,
+            { returnV -> workoutScreenViewModel.updateReps(exercise, returnV) },
+            1,
+        )
         ExerciseField("Sets left", exercise.sets, {newValue -> workoutScreenViewModel.updateSets(exercise, newValue)}, false,
             Modifier.weight(1f).fillMaxWidth())
     }
@@ -244,14 +248,14 @@ fun WorkoutExerciseWidget(timerViewModel: TimerViewModel, workoutViewModel: Work
 
 @Composable
 fun SuggestionStepper(
+    modifier: Modifier = Modifier,
     label: String,
     value: Int,
     onValueChange: (Int) -> Unit,
     suggestion: Int,
-    step: Int = 1,
-    modifier: Modifier = Modifier
+    step: Int = 1
 ) {
-    var containerHeight by remember { mutableStateOf(0) }
+    var containerHeight by remember { mutableIntStateOf(0) }
 
     Box(
         modifier = modifier
@@ -324,11 +328,11 @@ fun SuggestionStepper(
 
 @Composable
 fun Stepper(
+    modifier: Modifier = Modifier,
     label: String,
     value: Int,
     onValueChange: (Int) -> Unit,
-    step: Int = 1,
-    modifier: Modifier = Modifier
+    step: Int = 1
 ) {
     Box(modifier = modifier) {
         OutlinedTextField(
