@@ -8,21 +8,21 @@ plugins {
 }
 
 android {
-    namespace = "com.example.workoutapp"
+    namespace = "com.dd.workoutapp"
     compileSdk = 36
-
     defaultConfig {
-        applicationId = "com.example.workoutapp"
+        applicationId = "com.dd.workoutapp"
         minSdk = 26
         targetSdk = 36
         versionCode = 1
-        versionName = "1.0"
+        versionName = "0.5"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
     buildTypes {
         release {
+            isDebuggable = false
             isMinifyEnabled = false
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }
