@@ -23,10 +23,14 @@ message WorkoutData {
   repeated ExerciseData exercises = 3;
 }
 
+message ActiveWorkoutData {
+  string id = 1;
+  repeated ExerciseData remainingExercises = 2;
+}
+
 message WorkoutDataList {
   repeated WorkoutData workouts = 1;
-
   repeated LoggedExerciseData loggedExercises = 2;
-
   map<string, WorkoutData> weekMap = 3;
+  ActiveWorkoutData activeWorkout = 4;
 }

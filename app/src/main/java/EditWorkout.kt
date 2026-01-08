@@ -47,7 +47,7 @@ class EditWorkoutViewModelFactory(
 }
 
 @Composable
-fun EditWorkoutScreen(navController: NavController, workout: Workout, workoutViewModel: WorkoutViewModel) {
+fun EditWorkoutScreen(navController: NavController, workout: Workout, globalViewModel: GlobalViewModel) {
     val editWorkoutViewModel:EditWorkoutViewModel = viewModel(factory=EditWorkoutViewModelFactory(workout))
 
     Scaffold (
@@ -62,7 +62,7 @@ fun EditWorkoutScreen(navController: NavController, workout: Workout, workoutVie
                 ){
                     TrashButton(
                         onClick = {
-                            workoutViewModel.deleteWorkout(workout)
+                            globalViewModel.deleteWorkout(workout)
                             navController.navigate("home") {
                                 popUpTo(navController.graph.startDestinationId) {
                                     saveState = true
@@ -86,7 +86,7 @@ fun EditWorkoutScreen(navController: NavController, workout: Workout, workoutVie
                     CheckButton(
                         onClick = {
                             editWorkoutViewModel.updateWorkout()
-                            workoutViewModel.persistState()
+                            globalViewModel.persistGlobalData()
                             navController.navigate("home")
                         },
                         modifier = Modifier
