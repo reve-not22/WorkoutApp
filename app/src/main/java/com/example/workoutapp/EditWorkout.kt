@@ -1,3 +1,5 @@
+package com.example.workoutapp
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -17,7 +19,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import com.example.workoutapp.*
 
 class EditWorkoutViewModel(
     val workout: Workout
@@ -47,9 +48,7 @@ class EditWorkoutViewModelFactory(
 }
 
 @Composable
-fun EditWorkoutScreen(navController: NavController, workout: Workout, workoutViewModel: WorkoutViewModel) {
-    val editWorkoutViewModel:EditWorkoutViewModel = viewModel(factory=EditWorkoutViewModelFactory(workout))
-
+fun EditWorkoutScreen(navController: NavController, editWorkoutViewModel: EditWorkoutViewModel, workoutViewModel: WorkoutViewModel) {
     Scaffold (
         modifier = Modifier.fillMaxSize(),
         bottomBar = {
@@ -62,7 +61,7 @@ fun EditWorkoutScreen(navController: NavController, workout: Workout, workoutVie
                 ){
                     TrashButton(
                         onClick = {
-                            workoutViewModel.deleteWorkout(workout)
+                            workoutViewModel.deleteWorkout(editWorkoutViewModel.workout)
                             navController.navigate("home") {
                                 popUpTo(navController.graph.startDestinationId) {
                                     saveState = true

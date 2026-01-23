@@ -1,6 +1,5 @@
 package com.example.workoutapp
 
-import EditWorkoutScreen
 import android.content.Context
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -122,12 +121,6 @@ class WorkoutViewModel(
                     _loggedExercises.clear()
                     _loggedExercises.addAll(lList)
                 }
-
-                /*_loggedExercises.add(LoggedExercise("Bench", 25, LocalDate.now()))
-                _loggedExercises.add(LoggedExercise("Bench", 50, LocalDate.now().plusDays(1L)))
-                _loggedExercises.add(LoggedExercise("Bench", 35, LocalDate.now().plusDays(1L)))
-                _loggedExercises.add(LoggedExercise("Bench", 45, LocalDate.now().plusDays(1L)))
-                _loggedExercises.add(LoggedExercise("Bench", 35, LocalDate.now().plusDays(2L)))*/
 
                 if (!wList.isNullOrEmpty()) {
                     _workoutList.clear()
@@ -275,7 +268,9 @@ class MainActivity : ComponentActivity() {
                             return@composable
                         }
 
-                        EditWorkoutScreen(navController, workout, workoutViewModel)
+                        val editVM : EditWorkoutViewModel = viewModel(factory=EditWorkoutViewModelFactory(workout))
+
+                        EditWorkoutScreen(navController, editVM, workoutViewModel)
                     }
                 }
             }
