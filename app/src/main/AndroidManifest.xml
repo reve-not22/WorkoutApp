@@ -12,7 +12,7 @@
             android:supportsRtl="true"
             android:theme="@style/Theme.WorkoutApp">
         <activity
-                android:name=".MainActivity"
+                android:name="com.dd.workoutapp.MainActivity"
                 android:exported="true"
                 android:theme="@style/Theme.WorkoutApp">
             <intent-filter>

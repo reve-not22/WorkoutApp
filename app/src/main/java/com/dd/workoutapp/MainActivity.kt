@@ -1,4 +1,4 @@
-package com.example.workoutapp
+package com.dd.workoutapp
 
 import android.content.Context
 import android.os.Bundle
@@ -32,7 +32,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import com.example.workoutapp.ui.theme.WorkoutAppTheme
+import com.dd.workoutapp.ui.theme.WorkoutAppTheme
 import com.google.protobuf.InvalidProtocolBufferException
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.firstOrNull
@@ -134,6 +134,9 @@ class WorkoutViewModel(
     }
     private val _workoutList = mutableStateListOf<Workout>()
     val workoutList: List<Workout> get() = _workoutList
+
+    private val _draftList = mutableStateListOf<Workout>()
+    val draftList: List<Workout> get() = _draftList
 
     private val _loggedExercises = mutableStateListOf<LoggedExercise>()
 

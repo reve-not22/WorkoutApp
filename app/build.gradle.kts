@@ -8,11 +8,11 @@ plugins {
 }
 
 android {
-    namespace = "com.example.workoutapp"
+    namespace = "com.dd.workoutapp"
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.example.workoutapp"
+        applicationId = "com.dd.workoutapp"
         minSdk = 26
         targetSdk = 36
         versionCode = 1

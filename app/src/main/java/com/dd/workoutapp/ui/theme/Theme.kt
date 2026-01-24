@@ -1,4 +1,4 @@
-package com.example.workoutapp.ui.theme
+package com.dd.workoutapp.ui.theme
 
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
