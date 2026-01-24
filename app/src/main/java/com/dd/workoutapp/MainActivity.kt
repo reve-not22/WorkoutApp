@@ -1,6 +1,5 @@
-package com.example.workoutapp
+package com.dd.workoutapp
 
-import EditWorkoutScreen
 import android.content.Context
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -33,7 +32,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import com.example.workoutapp.ui.theme.WorkoutAppTheme
+import com.dd.workoutapp.ui.theme.WorkoutAppTheme
 import com.google.protobuf.InvalidProtocolBufferException
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.firstOrNull
@@ -123,12 +122,6 @@ class WorkoutViewModel(
                     _loggedExercises.addAll(lList)
                 }
 
-                /*_loggedExercises.add(LoggedExercise("Bench", 25, LocalDate.now()))
-                _loggedExercises.add(LoggedExercise("Bench", 50, LocalDate.now().plusDays(1L)))
-                _loggedExercises.add(LoggedExercise("Bench", 35, LocalDate.now().plusDays(1L)))
-                _loggedExercises.add(LoggedExercise("Bench", 45, LocalDate.now().plusDays(1L)))
-                _loggedExercises.add(LoggedExercise("Bench", 35, LocalDate.now().plusDays(2L)))*/
-
                 if (!wList.isNullOrEmpty()) {
                     _workoutList.clear()
                     _workoutList.addAll(wList)
@@ -141,6 +134,9 @@ class WorkoutViewModel(
     }
     private val _workoutList = mutableStateListOf<Workout>()
     val workoutList: List<Workout> get() = _workoutList
+
+    private val _draftList = mutableStateListOf<Workout>()
+    val draftList: List<Workout> get() = _draftList
 
     private val _loggedExercises = mutableStateListOf<LoggedExercise>()
 
@@ -275,7 +271,9 @@ class MainActivity : ComponentActivity() {
                             return@composable
                         }
 
-                        EditWorkoutScreen(navController, workout, workoutViewModel)
+                        val editVM : EditWorkoutViewModel = viewModel(factory=EditWorkoutViewModelFactory(workout))
+
+                        EditWorkoutScreen(navController, editVM, workoutViewModel)
                     }
                 }
             }

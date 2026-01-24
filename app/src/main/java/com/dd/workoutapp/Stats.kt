@@ -1,4 +1,4 @@
-package com.example.workoutapp
+package com.dd.workoutapp
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
