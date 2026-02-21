@@ -9,7 +9,12 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -48,6 +53,68 @@ class EditWorkoutViewModelFactory(
 
 @Composable
 fun EditWorkoutScreen(navController: NavController, editWorkoutViewModel: EditWorkoutViewModel, workoutViewModel: WorkoutViewModel) {
+
+    var showDialog by remember {mutableStateOf(true)}
+    var recover by remember { mutableStateOf<Boolean?>(null) }
+
+    val currentName = editWorkoutViewModel.workoutNameState.text as String
+    val currentEList = editWorkoutViewModel.exerciseList
+
+    LaunchedEffect(Unit) {
+        if (!workoutViewModel.draftMap.contains("edit") || workoutViewModel.draftMap["edit"]?.workoutName != currentName) {
+            workoutViewModel.addDraft("edit", Workout(currentEList, currentName))
+            showDialog = false
+        }
+    }
+
+    val draft = workoutViewModel.draftMap["edit"]
+
+    if (showDialog &&
+        draft != null &&
+        draft.exerciseList.isNotEmpty() &&
+        draft.workoutName == currentName) {
+
+        AlertDialog(
+            onDismissRequest = {showDialog = false},
+            confirmButton = {
+                Button(onClick = {
+                    recover = true
+                    showDialog = false
+                }) {
+                    Text("Yes")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = {
+                    showDialog = false
+                    recover = false
+                    workoutViewModel.addDraft("edit", Workout(currentEList, currentName))
+                }) {
+                    Text("No")
+                }
+            },
+            title = {
+                Text("Recover workout edit?")
+            }
+        )
+    }
+
+    LaunchedEffect(recover) {
+        when (recover) {
+            true -> {
+                editWorkoutViewModel.exerciseList.clear()
+                for (exercise in workoutViewModel.draftMap["edit"]?.exerciseList!!) {
+                    editWorkoutViewModel.addExercise(exercise)
+                }
+                workoutViewModel.draftMap["edit"]?.exerciseList = currentEList
+            }
+            false -> {
+                workoutViewModel.addDraft("edit", Workout(currentEList, currentName))
+            }
+            null -> {}
+        }
+    }
+
     Scaffold (
         modifier = Modifier.fillMaxSize(),
         bottomBar = {

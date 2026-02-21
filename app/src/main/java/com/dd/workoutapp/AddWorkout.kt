@@ -20,6 +20,8 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.distinctUntilChanged
 
 
 open class ModifyWorkoutViewModel: ViewModel() {
@@ -61,6 +63,7 @@ open class ModifyWorkoutViewModel: ViewModel() {
 class AddWorkoutViewModel : ModifyWorkoutViewModel() {
     fun saveWorkout(workoutViewModel: WorkoutViewModel) {
         workoutViewModel.addWorkout(Workout(exerciseList, workoutNameState.text as String))
+        workoutViewModel.draftMap.remove("add")
     }
 }
 
@@ -71,10 +74,22 @@ fun AddWorkoutScreen(navController: NavController, workoutViewModel: WorkoutView
     var showDialog by remember {mutableStateOf(true)}
     var recover by remember { mutableStateOf<Boolean?>(null) }
 
-    if (!workoutViewModel.draftMap.contains("add")) {
-        workoutViewModel.addDraft("add", Workout(addWorkoutViewModel.exerciseList, addWorkoutViewModel.workoutNameState.text as String))
+    val currentEList = addWorkoutViewModel.exerciseList
+    val currentName = addWorkoutViewModel.workoutNameState.text as String
+
+    LaunchedEffect(Unit) {
+        if (!workoutViewModel.draftMap.contains("add")) {
+            workoutViewModel.addDraft("add", Workout(currentEList, currentName))
+            showDialog = false
+        }
     }
-    else if (showDialog && workoutViewModel.draftMap["add"]?.exerciseList?.size!! > 0) {
+
+    val draft = workoutViewModel.draftMap["add"]
+
+    if (showDialog &&
+        draft != null &&
+        draft.exerciseList.isNotEmpty()
+    ) {
         AlertDialog(
             onDismissRequest = {showDialog = false},
             confirmButton = {
@@ -89,7 +104,7 @@ fun AddWorkoutScreen(navController: NavController, workoutViewModel: WorkoutView
                 TextButton(onClick = {
                     showDialog = false
                     recover = false
-                    workoutViewModel.addDraft("add", Workout(addWorkoutViewModel.exerciseList, addWorkoutViewModel.workoutNameState.text as String))
+                    workoutViewModel.addDraft("add", Workout(currentEList, currentName))
                 }) {
                     Text("No")
                 }
@@ -105,15 +120,14 @@ fun AddWorkoutScreen(navController: NavController, workoutViewModel: WorkoutView
             true -> {
                 for (exercise in workoutViewModel.draftMap["add"]?.exerciseList!!) {
                     addWorkoutViewModel.addExercise(exercise)
-                    workoutViewModel.draftMap["add"]?.exerciseList = addWorkoutViewModel.exerciseList
                 }
+                workoutViewModel.draftMap["add"]?.exerciseList = currentEList
             }
             false -> {
-                workoutViewModel.addDraft("add", Workout(addWorkoutViewModel.exerciseList, addWorkoutViewModel.workoutNameState.text as String))
+                workoutViewModel.addDraft("add", Workout(currentEList, currentName))
             }
             null -> {}
         }
-
     }
 
     Scaffold (

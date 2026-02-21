@@ -168,6 +168,69 @@ fun Long.formatTime(): String {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun WorkoutScreen(workoutViewModel:WorkoutViewModel, workoutScreenViewModel: WorkoutScreenViewModel, navController: NavController) {
+
+    var showDialog by remember {mutableStateOf(true)}
+    var recover by remember { mutableStateOf<Boolean?>(null) }
+
+    val currentName = workoutScreenViewModel.workout.workoutName
+    val currentEList = workoutScreenViewModel.uncompletedList
+
+    LaunchedEffect(Unit) {
+        if (!workoutViewModel.draftMap.contains("start") || workoutViewModel.draftMap["start"]?.workoutName != currentName) {
+            workoutViewModel.addDraft("start", Workout(currentEList, currentName))
+            showDialog = false
+        }
+    }
+
+    val draft = workoutViewModel.draftMap["start"]
+
+    if (showDialog &&
+        draft != null &&
+        draft.exerciseList.isNotEmpty() &&
+        draft.workoutName == currentName) {
+
+        AlertDialog(
+            onDismissRequest = {showDialog = false},
+            confirmButton = {
+                Button(onClick = {
+                    recover = true
+                    showDialog = false
+                }) {
+                    Text("Yes")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = {
+                    showDialog = false
+                    recover = false
+                    workoutViewModel.addDraft("start", Workout(currentEList, currentName))
+                }) {
+                    Text("No")
+                }
+            },
+            title = {
+                Text("Recover active workout?")
+            }
+        )
+    }
+
+    LaunchedEffect(recover) {
+        when (recover) {
+            true -> {
+                workoutScreenViewModel.uncompletedList.clear()
+                for (exercise in workoutViewModel.draftMap["start"]?.exerciseList!!) {
+                    workoutScreenViewModel.uncompletedList.add(exercise)
+                }
+                workoutViewModel.draftMap["start"]?.exerciseList = currentEList
+            }
+            false -> {
+                workoutViewModel.addDraft("start", Workout(currentEList, currentName))
+            }
+            null -> {}
+        }
+    }
+
+
     val timerViewModel: TimerViewModel = viewModel()
     Scaffold (
         topBar = {
