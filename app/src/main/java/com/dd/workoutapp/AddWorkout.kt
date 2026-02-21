@@ -68,6 +68,54 @@ class AddWorkoutViewModel : ModifyWorkoutViewModel() {
 fun AddWorkoutScreen(navController: NavController, workoutViewModel: WorkoutViewModel) {
     val addWorkoutViewModel: AddWorkoutViewModel = viewModel()
 
+    var showDialog by remember {mutableStateOf(true)}
+    var recover by remember { mutableStateOf<Boolean?>(null) }
+
+    if (!workoutViewModel.draftMap.contains("add")) {
+        workoutViewModel.addDraft("add", Workout(addWorkoutViewModel.exerciseList, addWorkoutViewModel.workoutNameState.text as String))
+    }
+    else if (showDialog && workoutViewModel.draftMap["add"]?.exerciseList?.size!! > 0) {
+        AlertDialog(
+            onDismissRequest = {showDialog = false},
+            confirmButton = {
+                Button(onClick = {
+                    recover = true
+                    showDialog = false
+                }) {
+                    Text("Yes")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = {
+                    showDialog = false
+                    recover = false
+                    workoutViewModel.addDraft("add", Workout(addWorkoutViewModel.exerciseList, addWorkoutViewModel.workoutNameState.text as String))
+                }) {
+                    Text("No")
+                }
+            },
+            title = {
+                Text("Recover workout draft?")
+            }
+        )
+    }
+
+    LaunchedEffect(recover) {
+        when (recover) {
+            true -> {
+                for (exercise in workoutViewModel.draftMap["add"]?.exerciseList!!) {
+                    addWorkoutViewModel.addExercise(exercise)
+                    workoutViewModel.draftMap["add"]?.exerciseList = addWorkoutViewModel.exerciseList
+                }
+            }
+            false -> {
+                workoutViewModel.addDraft("add", Workout(addWorkoutViewModel.exerciseList, addWorkoutViewModel.workoutNameState.text as String))
+            }
+            null -> {}
+        }
+
+    }
+
     Scaffold (
         modifier = Modifier.fillMaxSize(),
         bottomBar = {
@@ -110,7 +158,7 @@ fun AddWorkoutScreen(navController: NavController, workoutViewModel: WorkoutView
                 modifier = Modifier.fillMaxSize(),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                items(addWorkoutViewModel.exerciseList.size, key = {index -> addWorkoutViewModel.exerciseList[index].hashCode()}) {index ->
+                items(addWorkoutViewModel.exerciseList.size, key = {index -> addWorkoutViewModel.exerciseList[index].id}) {index ->
                     val exercise = addWorkoutViewModel.exerciseList[index]
 
                     val dismissState = rememberSwipeToDismissBoxState (

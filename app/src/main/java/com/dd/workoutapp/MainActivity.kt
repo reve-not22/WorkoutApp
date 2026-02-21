@@ -135,8 +135,9 @@ class WorkoutViewModel(
     private val _workoutList = mutableStateListOf<Workout>()
     val workoutList: List<Workout> get() = _workoutList
 
-    private val _draftList = mutableStateListOf<Workout>()
-    val draftList: List<Workout> get() = _draftList
+    //drafts map the name of the screen to the active workout
+    private val _draftMap = mutableStateMapOf<String, Workout>()
+    val draftMap: SnapshotStateMap<String, Workout> get() = _draftMap
 
     private val _loggedExercises = mutableStateListOf<LoggedExercise>()
 
@@ -149,6 +150,10 @@ class WorkoutViewModel(
     fun addWorkout(workout: Workout) {
         _workoutList.add(workout)
         persistState()
+    }
+
+    fun addDraft(workoutName: String, workout: Workout) {
+        _draftMap[workoutName] = workout
     }
 
     fun deleteWorkout(workout: Workout) {
@@ -226,7 +231,9 @@ class MainActivity : ComponentActivity() {
                     composable("login") { LoginScreen(navController) }
                     composable("home") { HomeScreen(navController, workoutViewModel) }
                     composable("stats") { StatsScreen(workoutViewModel) }
-                    composable("workout_add") { AddWorkoutScreen(navController, workoutViewModel) }
+                    composable("workout_add") {
+                        AddWorkoutScreen(navController, workoutViewModel)
+                    }
                     composable("workout_start/{workoutId}",
                         arguments = listOf(
                             navArgument("workoutId") {type = NavType.StringType}
